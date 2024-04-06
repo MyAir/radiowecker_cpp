@@ -21,7 +21,8 @@
 #define ALIGNRIGHT 2
 
 //pin to be used for light sensor
-#define LDR 36
+//#define LDR 36
+#define LDR 2
 
 //instance of prefernces
 extern Preferences pref;
@@ -40,10 +41,11 @@ typedef struct {
 //gloabal variables
 extern Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
+extern String wifiName;             // Name of the device when connecting to wifgi
 extern String ssid;                 //ssid for WLAN connection
 extern String pkey;                 //passkey for WLAN connection
-extern String ntp;   //NTP server url
-extern uint8_t curStation ;           //index for current selected station in stationlist
+extern String ntp;                  //NTP server url
+extern uint8_t curStation ;         //index for current selected station in stationlist
 extern uint8_t curGain ;            //current loudness
 extern uint8_t snoozeTime ;          //snooze time in minutes
 extern uint16_t alarm1 ;            //first alarm time 6:30

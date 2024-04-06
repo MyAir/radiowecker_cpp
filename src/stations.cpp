@@ -5,7 +5,8 @@
 
 //Definition of a set of tested default stations
 Station defstations[DEFAULTSTATIONS] PROGMEM = {
-{"http://icecast.ndr.de/ndr/ndr2/niedersachsen/mp3/128/stream.mp3","NDR2 Niedersachsen",1},
+//{"http://icecast.ndr.de/ndr/ndr2/niedersachsen/mp3/128/stream.mp3","NDR2 Niedersachsen",1},
+{"http://stream.srg-ssr.ch/m/drs3/mp3_128","SRF3",1},
 {"http://icecast.ndr.de/ndr/ndr1niedersachsen/hannover/mp3/128/stream.mp3","NDR1 Hannover",1},
 {"http://wdr-1live-live.icecast.wdr.de/wdr/1live/live/mp3/128/stream.mp3","WDR1",1},
 {"http://wdr-cosmo-live.icecast.wdr.de/wdr/cosmo/live/mp3/128/stream.mp3","WDR COSMO",1},

@@ -7,9 +7,9 @@
 #include "audio.h"
 
 
-#define LRCLK 25
-#define BCLK 26
-#define DOUT 33
+#define LRCLK 17
+#define DOUT 18
+#define BCLK 8
 
 //buffer size for stream buffering
 const int preallocateBufferSize = 82*1024;  //size of preallocated buffer

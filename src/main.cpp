@@ -22,7 +22,8 @@
 #define ALIGNRIGHT 2
 
 //pin to be used for light sensor
-#define LDR 36
+//#define LDR 36
+#define LDR 2
 
 //instance of prefernces
 Preferences pref;
@@ -40,6 +41,7 @@ typedef struct {
 //gloabal variables
 Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
+String wifiName = "Wecker1";      // Name of the device when connecting to wifgi
 String ssid = "";                 //ssid for WLAN connection
 String pkey = "";                 //passkey for WLAN connection
 String ntp = "de.pool.ntp.org";   //NTP server url
@@ -123,8 +125,13 @@ void findNextAlarm() {
 
 //setup
 void setup() {
+  // sleep(5);
   Serial.begin(115200);
   Serial.println("Load preferences");
+  Serial.printf("Total heap: %d\n", ESP.getHeapSize());
+  Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
+  Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
+  Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
   title[0] = 0;
   //preferences will be saved in the EPROM of the ESP32 to keep the values 
   //when power supply will be interrupted
@@ -156,7 +163,7 @@ void setup() {
   if (pref.isKey("station")) curStation = pref.getUShort("station");
   if (curStation >= STATIONS) curStation = 0; //check to avoid invalid station number
   actStation = curStation;   //set active station to current station 
-  Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
+Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
   //run setup functions in the sub parts
   setup_audio(); //setup audio streams
   setup_display(); //setup display interface
@@ -167,7 +174,7 @@ void setup() {
   displayMessage(5, 10, 310, 30, "Connect WLAN", ALIGNCENTER, true, ILI9341_YELLOW, ILI9341_BLACK,1);
   displayMessage(5, 50, 310, 30, ssid.c_str(), ALIGNCENTER, true, ILI9341_GREEN, ILI9341_BLACK,1);
   Serial.println("Connect WiFi");
-  connected = initWiFi(ssid, pkey);
+  connected = initWiFi(ssid, pkey, wifiName);
   if (connected) { //successful connection
     //setup real time clock
     configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", ntp.c_str());

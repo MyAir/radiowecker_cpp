@@ -1,0 +1,88 @@
+TFT:			ESP32-S3:
+VCC				3.3V Rail
+GND				GND 
+CS				10
+RESET			5
+DC				6
+SCI (MOSI)		11 (Same as T_DIN)
+SCK				12 (Same as T_CLK)
+LED				7
+SDO (MISO)		13 (Same as T_DO)
+T_CLK			12 (Same as SCK)
+T_CS			15
+T_DIN			11 (Same as SCI MOSI)
+T_DO			13 (Same as SDO MISO)
+T_IRQ			16
+
+PCM5102MK:		ESP32-S3:
+VCC				5V Rail (No 5V output from ESP32-S3 5V pin!)
+GND				GND
+GND				GND
+LRCK			17
+DATA			18
+BCK				8
+
+MAX98357A:		ESP32-S3:
+LRC				17
+BCLK			8
+DIN				18
+GAIN			5V/GND
+SD (Amp On/off)	9; 3V3 via R 643 Ohm = (Left/2 + right/2)
+GND				GND
+VCC (VDD)		5V
+
+MAX98357A GAIN:
+5V via 100kOhm	3db
+5V 				6db
+NC				9db
+GND				12db
+GND via 100Kohm	15db
+
+
+ESP32-S3 Left Pins:
+3V3
+3V3
+GND
+4				SD_CS
+5				RST
+6				DC
+7				TFT_LED
+15				TOUCH_CS
+16				TOUCH_IRQ
+17				LRCK
+18				DOUT
+8				BCLK
+3				- JTAG
+46				- LOG
+9				SD_MODE (LOW = Audio Off, HIGH = via R 643 Ohm = On)
+10				CS
+11				MOSI
+12				CLK
+13				MISO
+14				-
+5V
+GND
+
+ESP32-S3 Right Pins:
+GND
+TX				- U0TXD
+RX				- U0RXD
+1
+2				LDR
+42
+41
+40
+39
+38
+37
+36
+35
+0				- BOOT
+45				- VSPI
+48
+47
+21
+20
+19
+GND
+GND

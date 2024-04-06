@@ -6,29 +6,98 @@
 #include "tft_display.h"
 #include "01_ziffern.cpp"
 
-//pins for touchscreen
-#define TOUCH_CS 14
-#define TOUCH_IRQ 27
-
 //define names for fonts
 #define FNT9 &AT_Standard9pt7b
 #define FNT12 &AT_Bold12pt7b
-
-//pins for display
-#define TFT_CS   5   
-#define TFT_DC   4   
-#define TFT_RST  22
-#define TFT_LED  15
-#define TOUCH_CS 14
-#define LED_ON 0
-#define LS 23  // line spacing
 
 //day and month names in German
 const char* const PROGMEM days[] = {"Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"};
 const char* PROGMEM months[] = {"Jan.","Feb.","März","April","Mai","Juni","Juli","Aug.","Sept.","Okt.","Nov.","Dez."};
 
-//instance of display driver
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+//pins for display
+//#define TFT_CS   10   
+//#define TFT_DC   14   
+//#define TFT_RST  -1
+//#define TFT_RST  13
+//#define TFT_LED  10
+//#define TFT_LED  -1
+//#define TOUCH_CS 15
+
+////instance of display driver
+//Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+
+#define LED_ON 1
+#define LS 23  // line spacing
+
+// Thomas Note: from https://wokwi.com/projects/386464003580979201
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+// 
+// TFT ILI9341 Full color 240x320 2.8" LCD-TFT display with SPI interface
+// #	Name==Description===========ESP32S3/44==ESP32_urish==Arduino Uno============
+// 1	VCC	  Supply voltage	      5V          5V           5V
+// 2	GND	  Ground	              GND         GND          GND
+// 3	CS	  Chip select	          10          15           10†   † You connect CS and D/C to any digital Arduino pin. The pin numbers here are just an example.
+// 4	RST	  Reset*	              13          4            -     * The RST and backlight (LED) pins are not available in the simulation.
+// 5	D/C	  DC Data/command 	    14          2            9†    † You connect CS and D/C to any digital Arduino pin. The pin numbers here are just an example.
+// 6	MOSI	DIN data (MCU→LCD)	  11          23           11
+// 7	SCK	  CLK clock	            12          18           13
+// 8	LED	  Backlight LED*	      -           -            5V    * The RST and backlight (LED) pins are not available in the simulation.
+// 9	MISO	SPI data (LCD→MCU)‡	  - (9?)      19           12    ‡ You can leave MISO disconnected, unless you need to read data back from the LCD.
+// 
+// ===== CONSTRUCTOR might need ESP32s3/44p Hardware pins 11 (data) / 12 (clock) / 13 (RST), CS and DC can be defined, LED and MISO unconnected
+//#define CS   10                     // CS chipsel pin# std.S3 10  (ESP32 5)
+//#define DC   14                     // DC datcom  pin# std.S3 14  (ESP32 2)
+//#define MOSI 11                     // MOSI data  pin# std.S3 11  (ESP32 23)
+//#define CLK  12                     // CLK  clock pin# std.S3 12  (ESP32 18)
+//#define RST  13                     // RST reset  pin# std.S3 13  (ESP32 16)
+//#define MISO -1? 3 ?                // MISO unconnected or e.g. pin# std.S3 3  (ESP32 ?)
+//Adafruit_ILI9341 TFT = Adafruit_ILI9341(CS, DC, MOSI, CLK, RST, MISO); // Software Constructor for TFT ILI9341
+//Adafruit_ILI9341 TFT = Adafruit_ILI9341(CS, DC);                       // Hardware constructor (11 data) (12 clock) (13 RST)
+// %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+// Breadboard Setup:
+/*
+#define CS   10                     // CS chipsel pin# std.S3 10  (ESP32 5)
+#define RST  5                      // RST reset  pin# std.S3 13  (ESP32 16)
+#define DC   6                      // DC datcom  pin# std.S3 14  (ESP32 2)
+#define MOSI 11                     // MOSI data  pin# std.S3 11  (ESP32 23)
+#define CLK  12                     // CLK  clock pin# std.S3 12  (ESP32 18)
+#define TFT_LED  7
+#define MISO 13
+#define T_CLK -1                    // 12 T_CLK Connected to SCK (CLK)
+//#define TOUCH_CS 15
+#define TOUCH_CS 1
+#define T_DIN -1                    // 11 T_DIN Connected to MOSI
+#define T_DO -1                     // 13 T_DO Connected to MISO 
+//#define TOUCH_IRQ 16
+#define TOUCH_IRQ 2
+#define SD_CS   4                   // SD CS chipselelct
+//Breadboard Setup end
+*/
+
+// TFT Combiner PCB Setup:
+#define CS   10                     // CS chipsel pin# std.S3 10  (ESP32 5)
+#define RST  5                      // RST reset  pin# std.S3 13  (ESP32 16)
+#define DC   6                      // DC datcom  pin# std.S3 14  (ESP32 2)
+#define MOSI 11                     // MOSI data  pin# std.S3 11  (ESP32 23)
+#define CLK  12                     // CLK  clock pin# std.S3 12  (ESP32 18)
+#define TFT_LED  7
+#define MISO 13
+#define T_CLK -1                    // 12 T_CLK Connected to SCK (CLK)
+#define TOUCH_CS 15
+#define T_DIN -1                    // 11 T_DIN Connected to MOSI
+#define T_DO -1                     // 13 T_DO Connected to MISO 
+#define TOUCH_IRQ 16
+#define SD_CS   4                   // SD CS chipselelct
+// TFT Combiner PCB end
+
+
+Adafruit_ILI9341 tft = Adafruit_ILI9341(CS, DC, RST);
+//Adafruit_ILI9341 tft = Adafruit_ILI9341(CS, DC, MOSI, CLK, RST, MISO); // Software Constructor for TFT ILI9341
+//Adafruit_ILI9341 tft = Adafruit_ILI9341(CS, DC);
+
+//pins for touchscreen
+
 //instance for touchscreen driver
 XPT2046_Touchscreen touch(TOUCH_CS, TOUCH_IRQ);
 //instance to start callbacks on touch events
@@ -94,7 +163,8 @@ void setBGLight(uint8_t prct) {
   if (ledb <3) ledb = 3; //minimal brightness
   if (LED_ON == 0) ledb = 255 - ledb;
   Serial.printf("percent = %i LED = %i\n",prct,ledb);
-  //set the LED
+  Serial.printf("CS %i, DC %i, MOSI %i, CLK %i, RST %i, MISO %i\n", CS, DC, MOSI, CLK, RST, MISO);
+//set the LED
   analogWrite(TFT_LED, ledb);
 }
 

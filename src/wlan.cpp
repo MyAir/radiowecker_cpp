@@ -2,7 +2,7 @@
 #include <WiFi.h> 
 #include "wlan.h"
 //connect to the WLAN
-boolean initWiFi(String ssid, String pkey) {
+boolean initWiFi(String ssid, String pkey, String wifiName) {
     boolean connected = false;
     //first disconnect
     Serial.print("Disconnect");
@@ -11,6 +11,8 @@ boolean initWiFi(String ssid, String pkey) {
     WiFi.softAPdisconnect(true);
     Serial.print("Set WLAN Mode");
     //satrt station mode
+    WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE, INADDR_NONE);
+    WiFi.setHostname(wifiName.c_str());
     WiFi.mode(WIFI_STA);
     Serial.print("Verbindung zu ");
     Serial.print(ssid);
