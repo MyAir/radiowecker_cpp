@@ -41,9 +41,8 @@ typedef struct {
 //gloabal variables
 Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
-String wifiName = "Wecker1";      // Name of the device when connecting to wifgi
-String ssid = "";                 //ssid for WLAN connection
-String pkey = "";                 //passkey for WLAN connection
+String ssid = "xxxxx";            //ssid for WLAN connection
+String pkey = "yyyyy";   //passkey for WLAN connection
 String ntp = "de.pool.ntp.org";   //NTP server url
 uint8_t curStation = 0;           //index for current selected station in stationlist
 uint8_t curGain = 200;            //current loudness
@@ -174,7 +173,7 @@ Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssi
   displayMessage(5, 10, 310, 30, "Connect WLAN", ALIGNCENTER, true, ILI9341_YELLOW, ILI9341_BLACK,1);
   displayMessage(5, 50, 310, 30, ssid.c_str(), ALIGNCENTER, true, ILI9341_GREEN, ILI9341_BLACK,1);
   Serial.println("Connect WiFi");
-  connected = initWiFi(ssid, pkey, wifiName);
+  connected = initWiFi(ssid, pkey);
   if (connected) { //successful connection
     //setup real time clock
     configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", ntp.c_str());
@@ -228,9 +227,13 @@ void loop() {
   }
   //detect a disconnect
   if (connected && (WiFi.status() != WL_CONNECTED)){
+    if (connected) {
+      //remember tick count for automatic retry
+      //MyAir Note: Only set discon time once when first disconnect is deteced.
+      discon = millis();
+    }
+    //MyAir Note: set connected to false AFTER discon time has been saved once.
     connected = false;
-    //remember tick count for automatic retry
-    discon = millis();
     //show message on display
     displayClear();
     displayMessage(5, 10, 310, 30, "Connection lost", ALIGNCENTER, true, ILI9341_RED, ILI9341_BLACK,1);
@@ -259,9 +262,10 @@ void loop() {
     if (connected  && getLocalTime(&ti)) {
       minutes = ti.tm_hour * 60 + ti.tm_min;
       weekday = ti.tm_wday;
-    } else {
-      connected = false;
-      discon = millis();
+    //MyAir Note: Remove Disconnect handling as it's already handled (properly) before.
+    //} else {
+    //  connected = false;
+    //  discon = millis();
     }
     //set BG light if clockk is displayed
     if (connected && clockmode) {
