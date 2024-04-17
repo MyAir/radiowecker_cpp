@@ -49,6 +49,7 @@ String ntp = "de.pool.ntp.org";   //NTP server url
 uint8_t curStation = 0;           //index for current selected station in stationlist
 uint8_t curGain = 200;            //current loudness
 uint8_t snoozeTime = 30;          //snooze time in minutes
+boolean alarmon = false;           //flag if alarms are turend on or off
 uint16_t alarm1 = 390;            //first alarm time 6:30
 uint8_t alarmday1 = 0B00111110;   //valid weekdays (example 00111110 means monday through friday)
 uint16_t alarm2 = 480;            //second alarm time 8:00
