@@ -127,7 +127,9 @@ void findNextAlarm() {
 
 //setup
 void setup() {
-  // sleep(5);
+  #ifdef BUILD_TYPE_DEV //Build type for development
+  sleep(5);
+  #endif
   Serial.begin(115200);
   Serial.println("Load preferences");
   Serial.printf("Total heap: %d\n", ESP.getHeapSize());
