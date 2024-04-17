@@ -169,6 +169,7 @@ void setup() {
   if (pref.isKey("snooze")) snoozeTime = pref.getUShort("snooze");
   bright = 80; //default value
   if (pref.isKey("bright")) bright = pref.getUShort("bright");
+  if (pref.isKey("alarmon")) alarmon = pref.getBool("alarmon");
   alarm1 = 390;    //6:30
   if (pref.isKey("alarm1")) alarm1 = pref.getUInt("alarm1");
   alarmday1 = 0B00111110; //mo-fr
@@ -207,7 +208,18 @@ Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssi
     weekday = ti.tm_wday;
     Serial.println("Start");
     //if alarm is on get date and time for next alarm
-    if (pref.isKey("alarmon") && pref.getBool("alarmon")) findNextAlarm();
+    //if (pref.isKey("alarmon") && pref.getBool("alarmon")) findNextAlarm();
+    if (pref.isKey("alarmon")){
+      Serial.println("Preference alarmon is defined");
+      if (pref.getBool("alarmon")){
+        Serial.println("Preference alarmon is true; running findNextAlarm()");
+        findNextAlarm();
+      }else{
+        Serial.println("Preference alarmon is false");
+      }
+    }else{
+      Serial.println("Preference alarmon is not defined");
+    }
     //Display time and next alarm if one is set
     showClock();
   } else { //connection not successful
