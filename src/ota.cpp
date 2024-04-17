@@ -48,7 +48,11 @@ void ota_onError(ota_error_t error) {
 //prepare OTA
 void setup_ota() {
   //set host name and passwort
+  #ifdef BUILD_TYPE_DEV //Build type for development
+  ArduinoOTA.setHostname("radiowecker-dev");
+  #else // Build type release
   ArduinoOTA.setHostname("radiowecker");
+  #endif //BUILD_TYPE_DEV
   ArduinoOTA.setPassword("weckerupdate");
   //register callback routines
   ArduinoOTA.onStart(ota_onStart);
