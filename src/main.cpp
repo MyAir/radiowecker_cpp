@@ -204,6 +204,8 @@ Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssi
   setup_ota();
   //remember the tick count for the timed event
   tick = millis();
+  //subtract no of current seconds from tick count to get first time update on the minute.
+  if (connected) tick = tick - (ti.tm_sec * 1000);
   start_conf = 0;
 }
 
