@@ -41,7 +41,6 @@ typedef struct {
 //gloabal variables
 extern Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
-extern String wifiName;             // Name of the device when connecting to wifgi
 extern String ssid;                 //ssid for WLAN connection
 extern String pkey;                 //passkey for WLAN connection
 extern String ntp;                  //NTP server url
