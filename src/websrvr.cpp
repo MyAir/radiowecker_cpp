@@ -1,4 +1,5 @@
 #include <common.h> 
+#include <tft_display.h>
 
 #include <WebServer.h>
 // #include "knoepfe.h" //Graphic data for buttons
@@ -161,7 +162,8 @@ void setAlarms() {
   pref.putUShort("alarmday2",alarmday2);
   Serial.printf("days1 %x days2 %x\n",alarmday1,2);
   findNextAlarm();
-  if (clockmode) showNextAlarm();
+  //if (clockmode) showNextAlarm();
+  if (clockmode) showClock();
   server.send(200,"text/plain","OK");
 }
 
