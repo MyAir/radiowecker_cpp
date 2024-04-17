@@ -39,6 +39,8 @@ typedef struct {
 #define STATIONS 30 //number of stations in the list
 
 //gloabal variables
+uint8_t             _resetResaon = (esp_reset_reason_t) ESP_RST_UNKNOWN;
+
 Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
 String ssid = "xxxxx";            //ssid for WLAN connection
@@ -131,6 +133,26 @@ void setup() {
   Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
   Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
   Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
+
+  // Display reset reason (from Schreibfaul1)
+  const char* rr = NULL;
+  _resetResaon = esp_reset_reason();
+  switch(_resetResaon){
+      case ESP_RST_UNKNOWN:    rr = "Reset reason can not be determined"; break;
+      case ESP_RST_POWERON:    rr = "Reset due to power-on event"; break;
+      case ESP_RST_EXT:        rr = "Reset by external pin (not applicable for ESP32)"; break;
+      case ESP_RST_SW:         rr = "Software reset via esp_restart"; break;
+      case ESP_RST_PANIC:      rr = "Software reset due to exception/panic"; break;
+      case ESP_RST_INT_WDT:    rr = "Reset (software or hardware) due to interrupt watchdog"; break;
+      case ESP_RST_TASK_WDT:   rr = "Reset due to task watchdog"; break;
+      case ESP_RST_WDT:        rr = "Reset due to other watchdogs"; _resetResaon = 1; break;
+      case ESP_RST_DEEPSLEEP:  rr = "Reset after exiting deep sleep mode"; break;
+      case ESP_RST_BROWNOUT:   rr = "Brownout reset (software or hardware)"; break;
+      case ESP_RST_SDIO:       rr = "Reset over SDIO"; break;
+  }
+  Serial.printf("RESET_REASON: %s", rr);
+  Serial.print("\n\n");
+
   title[0] = 0;
   //preferences will be saved in the EPROM of the ESP32 to keep the values 
   //when power supply will be interrupted
