@@ -15,7 +15,7 @@ boolean initWiFi(String ssid, String pkey) {
     Serial.print("Verbindung zu ");
     Serial.print(ssid);
     Serial.println(" herstellen");
-    Serial.println(pkey);
+    //Serial.println(pkey);
     //if we have a config we try to connect
     if (ssid != "") {
       WiFi.begin(ssid.c_str(),pkey.c_str());
