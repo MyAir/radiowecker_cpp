@@ -1,2 +1,2 @@
-boolean initWiFi(String ssid, String pkey, String wifiName);
+boolean initWiFi(String ssid, String pkey);
 #pragma once
