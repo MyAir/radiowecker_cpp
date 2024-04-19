@@ -115,7 +115,33 @@ void getAlarms() {
     buf[7+i*2] = '\n';
     buf[27+i*2] = '\n';
   }
+  /*
+    MyAir Note: Message format from getAlarms (each row followed by 1 byte newline):
+    al0: Alarmtime1 hh:mm 
+    al1: So 1/0
+    al2: Mo 1/0
+    ..
+    al8: Sa 1/0
+    al9: Alarmtime2 hh:mm
+    al10: So 1/0
+    al11: Mo 1/0
+    ..
+    al15: Sa 1/0
+    alon: AlarmOn 1/0
+    HEX 00 (null terminated string)
+    BUF:
+    0         1         2         3         4  
+    0123456789012345678901234567890123456789012
+    hh:mmn0n1n2n3n4n5n6nhh:mmn0n1n2n3n4n5n6nan0
+  */
   buf[40] = 0;
+  if (alarmon){
+    buf[40] = '1';
+  }else{
+    buf[40] = '0';
+  }
+  buf[41] = '\n';
+  buf[42] = 0;
   //send access data separated by new line
   //respond with access data
   server.send(200,"text/plain",String(buf));
@@ -132,18 +158,33 @@ uint16_t stringToMinutes(String val){
 //AJAX command /cmt/setalarms
 void setAlarms() {
   char txt[10];
+  bool alarmold = alarmon;
   uint8_t b;
-  Serial.println("Set alarms start");
+  Serial.println("Set alarms start...");
+  if (server.hasArg("alon")) {
+    Serial.printf("Received argument 'alon' = '%s'\n",server.arg("alon"));
+    if(server.arg("alon") == "1"){
+      alarmon = true;
+    }else{
+      alarmon = false;
+    }
+    if (alarmold != alarmon) {
+      alarmold = alarmon;
+      Serial.printf("Storing alarmon = %s\n", alarmon ? "true" : "false");
+      pref.putBool("alarmon",alarmon);
+      //switch to clock screen
+      clockmode = true;
+      showClock();
+    }
+  }
   if (server.hasArg("al0")) {
     alarm1 = stringToMinutes(server.arg("al0"));
-    Serial.print(server.arg("al0"));
-    Serial.printf(" = %i\n",alarm1);
+    Serial.printf("storing argument 'al0' = '%s' as %04i in 'alarm1'\n", server.arg("al0"),alarm1);
     pref.putUInt("alarm1",alarm1);
   }
   if (server.hasArg("al8")) {
     alarm2 = stringToMinutes(server.arg("al8"));
-    Serial.print(server.arg("al8"));
-    Serial.printf(" = %i\n",alarm2);
+    Serial.printf("storing argument 'al8' = '%s' as %04i in 'alarm2'\n", server.arg("al8"),alarm2);
     pref.putUInt("alarm2",alarm2);
   }
   alarmday1 = 0;
@@ -158,12 +199,14 @@ void setAlarms() {
       if (server.arg(txt) == "1") alarmday2 = alarmday2 | (1 << i); 
     }
   }
+  Serial.printf("storing 'al1-7'  arguments as %03i (0x'%02x') in 'alarmday1'\n", alarmday1, alarmday1);
   pref.putUShort("alarmday1",alarmday1);
+  Serial.printf("storing 'al9-15' arguments as %03i (0x'%02x') in 'alarmday2'\n", alarmday2, alarmday2);
   pref.putUShort("alarmday2",alarmday2);
-  Serial.printf("days1 %x days2 %x\n",alarmday1,2);
   findNextAlarm();
   //if (clockmode) showNextAlarm();
   if (clockmode) showClock();
+  Serial.println("... completed seting alarms.");
   server.send(200,"text/plain","OK");
 }
 

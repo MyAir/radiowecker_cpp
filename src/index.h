@@ -13,7 +13,13 @@ which can get very messy if there are lots of " in there.
 The important thing to remember is that )===== mustn't appear in your text anywhere, so make sure it's something really obscure.
 */
 #ifdef BUILD_TYPE_DEV //Build type for development
+//===========================================================
+//=                    D E V - B U I L D                    =
+//===========================================================
 const char MAIN_page[] PROGMEM = R"=====(
+<!-- ==================================================================================================================== -->
+<!--                                                HTML BEGIN                                                            -->
+<!-- ==================================================================================================================== -->
 <html>
 
 <head>
@@ -148,7 +154,7 @@ const char MAIN_page[] PROGMEM = R"=====(
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
-                    for (var i = 0; i < 16; i++) {
+                    for (var i = 0; i < 17; i++) {
                         if ((i == 0) || (i == 8)) {
                             $("#al" + i).val(parts[i]);
                         } else {
@@ -156,6 +162,13 @@ const char MAIN_page[] PROGMEM = R"=====(
                                 $("#al" + i).prop('checked', true);
                             } else {
                                 $("#al" + i).prop('checked', false);
+                            }
+                        }
+                        if (i == 16) {
+                            if (parts[i] == '1') {
+                                $("#alon").prop('checked', true);
+                            } else {
+                                $("#alon").prop('checked', false);
                             }
                         }
                     }
@@ -183,6 +196,7 @@ const char MAIN_page[] PROGMEM = R"=====(
                     vals['al' + i] = $("#al" + i).prop("checked") ? '1' : '0';
                 }
             }
+            vals['alon'] = $("#alon").prop("checked") ? '1' : '0';
 
             $.ajax({
                 type: "GET",
@@ -277,6 +291,11 @@ const char MAIN_page[] PROGMEM = R"=====(
     <h1 style="text-align:center;">Web Radiowecker</h1>
 
     <div class="alarmpane theme">
+        <div>
+            <label for="alon">Weckfunktion aktiv:</label>
+            <input id="alon" type="checkbox" />
+        </div>
+        <div>&nbsp;</div>
         <div>
             <label for="al0">Weckerzeit 1:</label>
             <input id="al0" type="time" class="numinput" />
@@ -380,9 +399,15 @@ const char MAIN_page[] PROGMEM = R"=====(
 </body>
 
 </html>
+<!-- ==================================================================================================================== -->
+<!--                                                 HTML END                                                             -->
+<!-- ==================================================================================================================== -->
 )=====";
 
 #else // Build type release
+//===================================================================
+//=                    R E L E A S E - B U I L D                    =
+//===================================================================
 const char MAIN_page[] PROGMEM = R"=====(
 <html>
 <head>

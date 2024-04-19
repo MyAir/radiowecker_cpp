@@ -1,3 +1,6 @@
+<!-- ==================================================================================================================== -->
+<!--                                                HTML BEGIN                                                            -->
+<!-- ==================================================================================================================== -->
 <html>
 
 <head>
@@ -132,7 +135,7 @@
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
-                    for (var i = 0; i < 16; i++) {
+                    for (var i = 0; i < 17; i++) {
                         if ((i == 0) || (i == 8)) {
                             $("#al" + i).val(parts[i]);
                         } else {
@@ -140,6 +143,13 @@
                                 $("#al" + i).prop('checked', true);
                             } else {
                                 $("#al" + i).prop('checked', false);
+                            }
+                        }
+                        if (i == 16) {
+                            if (parts[i] == '1') {
+                                $("#alon").prop('checked', true);
+                            } else {
+                                $("#alon").prop('checked', false);
                             }
                         }
                     }
@@ -167,6 +177,7 @@
                     vals['al' + i] = $("#al" + i).prop("checked") ? '1' : '0';
                 }
             }
+            vals['alon'] = $("#alon").prop("checked") ? '1' : '0';
 
             $.ajax({
                 type: "GET",
@@ -261,6 +272,11 @@
     <h1 style="text-align:center;">Web Radiowecker</h1>
 
     <div class="alarmpane theme">
+        <div>
+            <label for="alon">Weckfunktion aktiv:</label>
+            <input id="alon" type="checkbox" />
+        </div>
+        <div>&nbsp;</div>
         <div>
             <label for="al0">Weckerzeit 1:</label>
             <input id="al0" type="time" class="numinput" />
@@ -364,3 +380,6 @@
 </body>
 
 </html>
+<!-- ==================================================================================================================== -->
+<!--                                                 HTML END                                                             -->
+<!-- ==================================================================================================================== -->

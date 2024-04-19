@@ -322,9 +322,11 @@ void loop() {
       
     }
     //if an alarm is activated check for day and time
-    if ((alarmday < 8) && getLocalTime(&ti)) {
+    if ((alarmon) && (alarmday < 8) && getLocalTime(&ti)) {
       //if alarm day and time is reached turn radio on and get values for next expected alarm
-      if ((alarmday == weekday) && ((minutes == alarmtime) || (minutes == (alarmtime+1)))) {
+      //MyAir: Remove second alarmtime+1 as ticker should be set within the same minute now.
+      //if ((alarmday == weekday) && ((minutes == alarmtime) || (minutes == (alarmtime+1)))) {
+      if ((alarmday == weekday) && (minutes == alarmtime)) {
         toggleRadio(false);
         showRadio();
         findNextAlarm();

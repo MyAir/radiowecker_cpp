@@ -163,7 +163,6 @@ void setBGLight(uint8_t prct) {
   if (ledb <3) ledb = 3; //minimal brightness
   if (LED_ON == 0) ledb = 255 - ledb;
   Serial.printf("percent = %i LED = %i\n",prct,ledb);
-  Serial.printf("CS %i, DC %i, MOSI %i, CLK %i, RST %i, MISO %i\n", CS, DC, MOSI, CLK, RST, MISO);
 //set the LED
   analogWrite(TFT_LED, ledb);
 }
@@ -305,7 +304,8 @@ void showClock() {
     tft.fillScreen(ILI9341_BLACK);
     updateTime(true);
     if (radio) showRadio();
-    showNextAlarm();
+    //Only show next alarm if alarms are on and some alarm ist set for some day.
+    if (alarmon && (alarmday < 8)) showNextAlarm();
 }
 
 //select a station from the stationlist
@@ -363,18 +363,21 @@ void toggleRadio(boolean off) {
 
 //turn the alarm on or off
 void toggleAlarm() {
-  if (alarmday > 7) {
-    //if the alarm was off find the next alarm an activate it
-    findNextAlarm();
-    pref.putBool("alarmon",true);
+  Serial.println("Toggeling alarm...");
+  if (alarmon){
+    alarmon = false;
   } else {
-    //deactivate the alarm
-    alarmday = 8;
-    pref.putBool("alarmon",false);
+    alarmon = true;
+    //Scan for next alarm
+    findNextAlarm();
   }
+  Serial.printf("Storing alarmon = %s\n", alarmon ? "true" : "false");
+  pref.putBool("alarmon",alarmon);
+  
   //switch to clock screen
   clockmode = true;
   showClock();
+  Serial.println("...Toggeling alarm complete.");
   }
 
 void startSnooze() {
