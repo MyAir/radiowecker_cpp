@@ -2,6 +2,7 @@ void updateStation();
 void showTitle();
 void showClock();
 void showCommand();
+void drawButtons();
 void selectStation(uint16_t x);
 void touch_loop();
 void setup_display();

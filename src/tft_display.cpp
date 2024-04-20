@@ -374,9 +374,8 @@ void toggleAlarm() {
   Serial.printf("Storing alarmon = %s\n", alarmon ? "true" : "false");
   pref.putBool("alarmon",alarmon);
   
-  //switch to clock screen
-  clockmode = true;
-  showClock();
+  // Redraw buttons 
+  drawButtons();
   Serial.println("...Toggeling alarm complete.");
   }
 
@@ -582,11 +581,26 @@ void showCommand() {
     showBrigthness();
     showSnoozeTime();
     showStationList();
-    tft.drawRGBBitmap(0,176,knopfimg,320,64);
+    drawButtons();
     start_conf = millis();
 }
 
-
+void drawButtons(){
+    // Draw images of buttons at the bottom.
+    tft.drawRGBBitmap(0,176,knopfimg,320,64);
+    // Draw red diagonal line over Alarm clock symbol if Alarms ar off
+    if(!alarmon){
+      int16_t kx1 = 133;  //Top left corner of alarm clock button.
+      int16_t ky1 = 176+4;  //Top left corner of alarm clock button.
+      int16_t kx2 = 187;  //Bottom right corner of alarm clock button.
+      int16_t ky2 = 176+64-4;  //Bottom right corner of alarm clock button.
+      tft.drawLine((kx1+2),(ky1-0),(kx2+2),(ky2-0),ILI9341_RED);
+      tft.drawLine((kx1+1),(ky1-0),(kx2+1),(ky2-0),ILI9341_RED);
+      tft.drawLine((kx1+0),(ky1+0),(kx2+0),(ky2+0),ILI9341_RED);
+      tft.drawLine((kx1-1),(ky1+0),(kx2-1),(ky2+0),ILI9341_RED);
+      tft.drawLine((kx1-2),(ky1+0),(kx2-2),(ky2+0),ILI9341_RED);
+    }
+}
 //if an alarm is active, the next alarm date and time will be displayed
 //on the bottom line of clock screen
 void showNextAlarm(){
