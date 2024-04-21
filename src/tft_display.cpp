@@ -4,7 +4,8 @@
 #include "Adafruit_ILI9341.h"
 #include "fonts.h"
 #include "tft_display.h"
-#include "01_ziffern.cpp"
+//#include "01_ziffern.cpp"
+#include "01_ziffern_neu.cpp"
 
 //define names for fonts
 #define FNT9 &AT_Standard9pt7b
