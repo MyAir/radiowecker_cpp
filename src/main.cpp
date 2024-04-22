@@ -255,7 +255,6 @@ void loop() {
   touch_loop();
   //after 10 seconds switch back from config screen to clock screen
   if (!clockmode && ((millis() - start_conf) > 10000)) {
-    showClock();
     clockmode = true;
   }
   //show metadata if radio is active
