@@ -50,8 +50,10 @@ uint8_t curStation = 0;           //index for current selected station in statio
 uint8_t curGain = 200;            //current loudness
 uint8_t snoozeTime = 30;          //snooze time in minutes
 boolean alarmsActive = false;     //flag if all alarms are active or not
+boolean alarm1Active  = false;    //flag if first alarm is active or not
 uint16_t alarm1 = 390;            //first alarm time 6:30
 uint8_t alarmday1 = 0B00111110;   //valid weekdays (example 00111110 means monday through friday)
+boolean alarm2Active  = false;    //flag if second alarm is active or not
 uint16_t alarm2 = 480;            //second alarm time 8:00
 uint8_t alarmday2 = 0B01000001;   //valid week days (example 01000001 means sunday and saturday)
 uint8_t actStation = 0;           //index for current station in station list used for streaming 
@@ -102,25 +104,71 @@ void findNextAlarm() {
     wd = weekday; //variable to iterate over weekdays starting with today
     alarmday = 8;  //alarmday = 8 means no alarm
     mask = 1 << wd;  //mask to filter weekday to be tested
-    //test if alarm settings 1 matchs
-    if ((alarmday == 8) && ((alarmday1 & mask) != 0) && (alarm1 > minutes)) 
-      { alarmtime = alarm1; alarmday = wd;}
-    //test if alarm settings 2 matchs
-    if ((alarmday == 8) && ((alarmday2 & mask) != 0) && (alarm2 > minutes)) 
+    // Serial.printf("alarmday = %i, wd = %i, minutes = %i,  alarm1 = %i, alarm2 = %i, AlarmsActive = %s, alarm1Active = %s, alarm2Active = %s\n",alarmday, wd, minutes, alarm1,alarm2, alarmsActive ? "true" : "false", alarm1Active ? "true" : "false", alarm2Active ? "true" : "false");
+
+    //Search current weekday for future alarm:
+    //Test if alarm1 is active.
+    if (alarm1Active){
+      //Test if alarm1 is set for current weekday in the future.
+      if ((alarmday == 8) && ((alarmday1 & mask) != 0) && (alarm1 > minutes) ) { alarmtime = alarm1; alarmday = wd;}
+    }
+    //test if alarm2 is active.
+    if (alarm2Active){
+      //test if no alarm1 was found today in the future but alarm2 is set for today in the future or
+      //     if alarm1 was found for today in the future but an earlier alarm2 is also set for today in the future. 
+      if (((alarmday == 8) && ((alarmday2 & mask) != 0) && (alarm2 > minutes) ) ||
+          ((alarmday != 8) && ((alarmday2 & mask) != 0) && (alarm2 > minutes) && (alarm2 < alarm1)))
       { alarmtime = alarm2; alarmday = wd;}
-    if (alarmday == 8) { //if no alarm continue search
+    }
+
+    //if no future alarms were found today, search the next weekdays until weekday before today:
+    if (alarmday == 8) { 
+      //No future alarm was found for today. Search the next weekdays until weekday before today.
       do {
         wd++; //next weekday
-        if (wd > 7) wd = 0;
+        if (wd > 7) wd = 0; //In case we went from Saturday (wd=7) to Sunday (wd=0), reset wd from 8 back to 0. 
         mask = 1 << wd;
-        //test if alarm settings 1 matchs
+
+        //Test if alarm1 is active.
+        if (alarm1Active){
+          //Alarm1 is active.
+
+          //Test if alarm1 is set for this day.
         if ((alarmday == 8) && ((alarmday1 & mask) != 0) ) { alarmtime = alarm1; alarmday = wd;}
-        //test if alarm settings 1 matchs
-        if ((alarmday == 8) && ((alarmday2 & mask) != 0) ) { alarmtime = alarm2; alarmday = wd;}
-        
+        }
+        //Test if alarm2 is active.
+        if (alarm2Active){
+          //Alarm2 is active.
+
+          //Test if alarm1 was not found this wekday but alarm2 is set for this weekday or
+          //     if alarm1 was found this weekday but alarm alarm2 is also set for this weekday at an earlier time than alarm1.
+          if (((alarmday == 8) && ((alarmday2 & mask) != 0)) ||
+              ((alarmday != 8) && ((alarmday2 & mask) != 0) && (alarm2 < alarm1))) 
+            { alarmtime = alarm2; alarmday = wd;}
+        }
       } while ((alarmday == 8) && (wd != weekday)); //continue until an valid alarm was found or a week is over
     }
     
+    //If still no alarm, search for alarms today in the past:
+    if (alarmday == 8){
+        //Note: wd is back to current weekday due to exit criteria of do loop before.
+
+        //Test if alarm1 is active.
+        if (alarm1Active){
+          //Alarm1 is active:
+          //Test if any alarm1 is set for today.
+          if ((alarmday == 8) && ((alarmday1 & mask) != 0) ) { alarmtime = alarm1; alarmday = wd;}
+        }
+        //Test if alarm2 is active.
+        if (alarm2Active){
+          //Alarm2 is active:
+          //Test if no alarm1 is set today but some alarm2 is set for today or
+          //     if some alarm1 is set today but alarm alarm2 is also set today but at an earlier time.
+          if (((alarmday == 8) && ((alarmday2 & mask) != 0)) ||
+              ((alarmday != 8) && ((alarmday2 & mask) != 0) && (alarm2 < alarm1))) 
+            { alarmtime = alarm2; alarmday = wd;}
+        }
+    }
     Serial.printf("Next alarm %i on %i\n",alarmtime,alarmday);
   }
 }
@@ -173,6 +221,8 @@ void setup() {
   bright = 80; //default value
   if (pref.isKey("bright")) bright = pref.getUShort("bright");
   if (pref.isKey("alarmsActive")) alarmsActive = pref.getBool("alarmsActive");
+  if (pref.isKey("alarm1Active")) alarm1Active = pref.getBool("alarm1Active");
+  if (pref.isKey("alarm2Active")) alarm2Active = pref.getBool("alarm2Active");
   alarm1 = 390;    //6:30
   if (pref.isKey("alarm1")) alarm1 = pref.getUInt("alarm1");
   alarmday1 = 0B00111110; //mo-fr
@@ -210,18 +260,8 @@ Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssi
     minutes = ti.tm_hour * 60 + ti.tm_min;
     weekday = ti.tm_wday;
     Serial.println("Start");
-    //if alarm is on get date and time for next alarm
-    if (pref.isKey("alarmsActive")){
-      Serial.println("Preference alarmsActive is defined");
-      if (pref.getBool("alarmsActive")){
-        Serial.println("Preference alarmsActive is true; running findNextAlarm()");
-        findNextAlarm();
-      }else{
-        Serial.println("Preference alarmsActive is false");
-      }
-    }else{
-      Serial.println("Preference alarmsActive is not defined");
-    }
+    //if alarms are active get date and time for next alarm
+    if (alarmsActive) findNextAlarm();
     //Display time and next alarm if one is set
     showClock();
   } else { //connection not successful
@@ -256,6 +296,7 @@ void loop() {
   //after 10 seconds switch back from config screen to clock screen
   if (!clockmode && ((millis() - start_conf) > 10000)) {
     clockmode = true;
+    showClock();
   }
   //show metadata if radio is active
   if (newTitle && radio && clockmode) {

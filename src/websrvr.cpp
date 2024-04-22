@@ -11,6 +11,9 @@
 #include "stations.h"
 #include "websrvr.h"
 
+//Weekdays in german. 
+const char* const PROGMEM days[] = {"Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"};
+
 WebServer server(80);
 
 //called from main loop
@@ -100,7 +103,7 @@ void getAccessData() {
 
 //AJAX command /cmd/getalarms
 void getAlarms() {
-  char buf[45];
+  char buf[47];
   uint8_t h,m,mask,i;
   h = alarm1 /60;
   m = alarm1 % 60;
@@ -128,20 +131,33 @@ void getAlarms() {
     ..
     al15: Sa 1/0
     alact: alarmsActive 1/0
+    al1act: alarm1Active 1/0
+    al2act: alarm2Active 1/0
     HEX 00 (null terminated string)
     BUF:
     0         1         2         3         4  
-    0123456789012345678901234567890123456789012
-    hh:mmn0n1n2n3n4n5n6nhh:mmn0n1n2n3n4n5n6nan0
+    01234567890123456789012345678901234567890123456
+    hh:mmn0n1n2n3n4n5n6nhh:mmn0n1n2n3n4n5n6nan1n2n0
   */
-  buf[40] = 0;
   if (alarmsActive){
     buf[40] = '1';
   }else{
     buf[40] = '0';
   }
   buf[41] = '\n';
-  buf[42] = 0;
+  if (alarm1Active){
+    buf[42] = '1';
+  }else{
+    buf[42] = '0';
+  }
+  buf[43] = '\n';
+  if (alarm2Active){
+    buf[44] = '1';
+  }else{
+    buf[44] = '0';
+  }
+  buf[45] = '\n';
+  buf[46] = 0;
   //send access data separated by new line
   //respond with access data
   server.send(200,"text/plain",String(buf));
@@ -158,7 +174,10 @@ uint16_t stringToMinutes(String val){
 //AJAX command /cmt/setalarms
 void setAlarms() {
   char txt[10];
-  bool alarmold = alarmsActive;
+  char msg[255];
+  bool alarmsActiveOld = alarmsActive;
+  bool alarm1ActiveOld = alarm1Active;
+  bool alarm2ActiveOld = alarm2Active;
   uint8_t b;
   Serial.println("Set alarms start...");
   if (server.hasArg("alact")) {
@@ -168,13 +187,39 @@ void setAlarms() {
     }else{
       alarmsActive = false;
     }
-    if (alarmold != alarmsActive) {
-      alarmold = alarmsActive;
+    if (alarmsActiveOld != alarmsActive) {
+      alarmsActiveOld = alarmsActive;
       Serial.printf("Storing alarmsActive = %s\n", alarmsActive ? "true" : "false");
       pref.putBool("alarmsActive",alarmsActive);
       //switch to clock screen
       clockmode = true;
       showClock();
+    }
+  }
+  if (server.hasArg("al1act")) {
+    Serial.printf("Received argument 'al1act' = '%s'\n",server.arg("al1act"));
+    if(server.arg("al1act") == "1"){
+      alarm1Active = true;
+    }else{
+      alarm1Active = false;
+    }
+    if (alarm1ActiveOld != alarm1Active) {
+      alarm1ActiveOld = alarm1Active;
+      Serial.printf("Storing alarm1Active = %s\n", alarm1Active ? "true" : "false");
+      pref.putBool("alarm1Active",alarm1Active);
+    }
+  }
+  if (server.hasArg("al2act")) {
+    Serial.printf("Received argument 'al2act' = '%s'\n",server.arg("al2act"));
+    if(server.arg("al2act") == "1"){
+      alarm2Active = true;
+    }else{
+      alarm2Active = false;
+    }
+    if (alarm2ActiveOld != alarm2Active) {
+      alarm2ActiveOld = alarm2Active;
+      Serial.printf("Storing alarm2Active = %s\n", alarm2Active ? "true" : "false");
+      pref.putBool("alarm2Active",alarm2Active);
     }
   }
   if (server.hasArg("al0")) {
@@ -207,7 +252,23 @@ void setAlarms() {
   //if (clockmode) showNextAlarm();
   if (clockmode) showClock();
   Serial.println("... completed seting alarms.");
-  server.send(200,"text/plain","OK");
+  if (alarmsActive){
+    //Alarms are active.
+    if (alarmday == 8){
+      //No alarm was found.
+      server.send(200,"text/plain","Weckzeiten gespeichert.\nKein Wecker gestellt da kein aktiver wecker gefunden wurde!");
+    }else{
+      //Alarm was found.
+      uint8_t h,m;
+      h = alarmtime / 60;
+      m = alarmtime % 60;
+      sprintf(msg,"Weckzeiten gespeichert.\nWecker gestellt: %s um %02d:%02d",days[alarmday],h,m);
+      server.send(200,"text/plain",msg);
+    }
+  }else{
+    //Alarms are deactivated.
+    server.send(200,"text/plain","Weckzeiten gespeichert.\nKein Wecker gestellt da Weckfunktion deaktiviert ist!");
+  }
 }
 
 //AJAX command /cmd/getstation

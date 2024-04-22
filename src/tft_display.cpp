@@ -610,7 +610,6 @@ void showNextAlarm(){
   if (clockmode && (alarmday < 8)) {
     h = alarmtime / 60;
     m = alarmtime % 60;
-    //sprintf(txt,"Wecker: %s um %i:%i",days[alarmday],h,m);
     sprintf(txt,"Wecker: %s um %02d:%02d",days[alarmday],h,m);
     textInBox(0,220,320,20,txt,ALIGNCENTER,false,0xC000,ILI9341_BLACK,1);
   }

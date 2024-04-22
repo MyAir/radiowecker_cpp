@@ -48,8 +48,10 @@ extern uint8_t curStation ;         //index for current selected station in stat
 extern uint8_t curGain ;            //current loudness
 extern uint8_t snoozeTime ;         //snooze time in minutes
 extern boolean alarmsActive ;       //flag if alarms are turend on or off
+extern boolean alarm1Active ;       //flag if first alarm is active or not
 extern uint16_t alarm1 ;            //first alarm time 6:30
 extern uint8_t alarmday1;           //valid weekdays (example 00111110 means monday through friday)
+extern boolean alarm2Active ;       //flag if second alarm is active or not
 extern uint16_t alarm2 ;            //second alarm time 8:00
 extern uint8_t alarmday2;           //valid week days (example 01000001 means sunday and saturday)
 extern uint8_t actStation;          //index for current station in station list used for streaming 

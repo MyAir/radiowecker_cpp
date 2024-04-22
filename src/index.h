@@ -154,7 +154,7 @@ const char MAIN_page[] PROGMEM = R"=====(
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
-                    for (var i = 0; i < 17; i++) {
+                    for (var i = 0; i < 19; i++) {
                         if ((i == 0) || (i == 8)) {
                             $("#al" + i).val(parts[i]);
                         } else {
@@ -169,6 +169,20 @@ const char MAIN_page[] PROGMEM = R"=====(
                                 $("#alact").prop('checked', true);
                             } else {
                                 $("#alact").prop('checked', false);
+                            }
+                        }
+                        if (i == 17) {
+                            if (parts[i] == '1') {
+                                $("#al1act").prop('checked', true);
+                            } else {
+                                $("#al1act").prop('checked', false);
+                            }
+                        }
+                        if (i == 18) {
+                            if (parts[i] == '1') {
+                                $("#al2act").prop('checked', true);
+                            } else {
+                                $("#al2act").prop('checked', false);
                             }
                         }
                     }
@@ -197,6 +211,8 @@ const char MAIN_page[] PROGMEM = R"=====(
                 }
             }
             vals['alact'] = $("#alact").prop("checked") ? '1' : '0';
+            vals['al1act'] = $("#al1act").prop("checked") ? '1' : '0';
+            vals['al2act'] = $("#al2act").prop("checked") ? '1' : '0';
 
             $.ajax({
                 type: "GET",
@@ -267,8 +283,6 @@ const char MAIN_page[] PROGMEM = R"=====(
         }
 
         .numinput {
-            position: absolute;
-            left: 160px;
             width: 60px;
         }
 
@@ -292,15 +306,16 @@ const char MAIN_page[] PROGMEM = R"=====(
 
     <div class="alarmpane theme">
         <div>
-            <label for="alact">Weckfunktion aktiv:</label>
+            <label for="alact">Weckfunktion eingeschaltet:</label>
             <input id="alact" type="checkbox" />
         </div>
         <div>&nbsp;</div>
         <div>
             <label for="al0">Weckerzeit 1:</label>
             <input id="al0" type="time" class="numinput" />
+            <input id="al1act" type="checkbox" />
+            <label for="al1act">Aktiv</label>
         </div>
-        <div>&nbsp;</div>
         <div>
             <table style="margin: auto;">
                 <tr>
@@ -327,8 +342,9 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div>
             <label for="al8">Weckerzeit 2:</label>
             <input id="al8" type="time" class="numinput" />
+            <input id="al2act" type="checkbox" />
+            <label for="al2act">Aktiv</label>
         </div>
-        <div>&nbsp;</div>
         <div>
             <table style="margin: auto;">
                 <tr>
@@ -546,7 +562,7 @@ const char MAIN_page[] PROGMEM = R"=====(
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
-                    for (var i = 0; i < 17; i++) {
+                    for (var i = 0; i < 19; i++) {
                         if ((i == 0) || (i == 8)) {
                             $("#al" + i).val(parts[i]);
                         } else {
@@ -561,6 +577,20 @@ const char MAIN_page[] PROGMEM = R"=====(
                                 $("#alact").prop('checked', true);
                             } else {
                                 $("#alact").prop('checked', false);
+                            }
+                        }
+                        if (i == 17) {
+                            if (parts[i] == '1') {
+                                $("#al1act").prop('checked', true);
+                            } else {
+                                $("#al1act").prop('checked', false);
+                            }
+                        }
+                        if (i == 18) {
+                            if (parts[i] == '1') {
+                                $("#al2act").prop('checked', true);
+                            } else {
+                                $("#al2act").prop('checked', false);
                             }
                         }
                     }
@@ -589,6 +619,8 @@ const char MAIN_page[] PROGMEM = R"=====(
                 }
             }
             vals['alact'] = $("#alact").prop("checked") ? '1' : '0';
+            vals['al1act'] = $("#al1act").prop("checked") ? '1' : '0';
+            vals['al2act'] = $("#al2act").prop("checked") ? '1' : '0';
 
             $.ajax({
                 type: "GET",
@@ -659,8 +691,6 @@ const char MAIN_page[] PROGMEM = R"=====(
         }
 
         .numinput {
-            position: absolute;
-            left: 160px;
             width: 60px;
         }
 
@@ -684,15 +714,16 @@ const char MAIN_page[] PROGMEM = R"=====(
 
     <div class="alarmpane theme">
         <div>
-            <label for="alact">Weckfunktion aktiv:</label>
+            <label for="alact">Weckfunktion eingeschaltet:</label>
             <input id="alact" type="checkbox" />
         </div>
         <div>&nbsp;</div>
         <div>
             <label for="al0">Weckerzeit 1:</label>
             <input id="al0" type="time" class="numinput" />
+            <input id="al1act" type="checkbox" />
+            <label for="al1act">Aktiv</label>
         </div>
-        <div>&nbsp;</div>
         <div>
             <table style="margin: auto;">
                 <tr>
@@ -719,8 +750,9 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div>
             <label for="al8">Weckerzeit 2:</label>
             <input id="al8" type="time" class="numinput" />
+            <input id="al2act" type="checkbox" />
+            <label for="al2act">Aktiv</label>
         </div>
-        <div>&nbsp;</div>
         <div>
             <table style="margin: auto;">
                 <tr>
