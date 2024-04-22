@@ -127,7 +127,7 @@ void getAlarms() {
     al11: Mo 1/0
     ..
     al15: Sa 1/0
-    alon: AlarmOn 1/0
+    alact: alarmsActive 1/0
     HEX 00 (null terminated string)
     BUF:
     0         1         2         3         4  
@@ -135,7 +135,7 @@ void getAlarms() {
     hh:mmn0n1n2n3n4n5n6nhh:mmn0n1n2n3n4n5n6nan0
   */
   buf[40] = 0;
-  if (alarmon){
+  if (alarmsActive){
     buf[40] = '1';
   }else{
     buf[40] = '0';
@@ -158,20 +158,20 @@ uint16_t stringToMinutes(String val){
 //AJAX command /cmt/setalarms
 void setAlarms() {
   char txt[10];
-  bool alarmold = alarmon;
+  bool alarmold = alarmsActive;
   uint8_t b;
   Serial.println("Set alarms start...");
-  if (server.hasArg("alon")) {
-    Serial.printf("Received argument 'alon' = '%s'\n",server.arg("alon"));
-    if(server.arg("alon") == "1"){
-      alarmon = true;
+  if (server.hasArg("alact")) {
+    Serial.printf("Received argument 'alact' = '%s'\n",server.arg("alact"));
+    if(server.arg("alact") == "1"){
+      alarmsActive = true;
     }else{
-      alarmon = false;
+      alarmsActive = false;
     }
-    if (alarmold != alarmon) {
-      alarmold = alarmon;
-      Serial.printf("Storing alarmon = %s\n", alarmon ? "true" : "false");
-      pref.putBool("alarmon",alarmon);
+    if (alarmold != alarmsActive) {
+      alarmold = alarmsActive;
+      Serial.printf("Storing alarmsActive = %s\n", alarmsActive ? "true" : "false");
+      pref.putBool("alarmsActive",alarmsActive);
       //switch to clock screen
       clockmode = true;
       showClock();

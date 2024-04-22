@@ -166,9 +166,9 @@ const char MAIN_page[] PROGMEM = R"=====(
                         }
                         if (i == 16) {
                             if (parts[i] == '1') {
-                                $("#alon").prop('checked', true);
+                                $("#alact").prop('checked', true);
                             } else {
-                                $("#alon").prop('checked', false);
+                                $("#alact").prop('checked', false);
                             }
                         }
                     }
@@ -196,7 +196,7 @@ const char MAIN_page[] PROGMEM = R"=====(
                     vals['al' + i] = $("#al" + i).prop("checked") ? '1' : '0';
                 }
             }
-            vals['alon'] = $("#alon").prop("checked") ? '1' : '0';
+            vals['alact'] = $("#alact").prop("checked") ? '1' : '0';
 
             $.ajax({
                 type: "GET",
@@ -292,8 +292,8 @@ const char MAIN_page[] PROGMEM = R"=====(
 
     <div class="alarmpane theme">
         <div>
-            <label for="alon">Weckfunktion aktiv:</label>
-            <input id="alon" type="checkbox" />
+            <label for="alact">Weckfunktion aktiv:</label>
+            <input id="alact" type="checkbox" />
         </div>
         <div>&nbsp;</div>
         <div>
@@ -558,9 +558,9 @@ const char MAIN_page[] PROGMEM = R"=====(
                         }
                         if (i == 16) {
                             if (parts[i] == '1') {
-                                $("#alon").prop('checked', true);
+                                $("#alact").prop('checked', true);
                             } else {
-                                $("#alon").prop('checked', false);
+                                $("#alact").prop('checked', false);
                             }
                         }
                     }
@@ -588,7 +588,7 @@ const char MAIN_page[] PROGMEM = R"=====(
                     vals['al' + i] = $("#al" + i).prop("checked") ? '1' : '0';
                 }
             }
-            vals['alon'] = $("#alon").prop("checked") ? '1' : '0';
+            vals['alact'] = $("#alact").prop("checked") ? '1' : '0';
 
             $.ajax({
                 type: "GET",
@@ -684,8 +684,8 @@ const char MAIN_page[] PROGMEM = R"=====(
 
     <div class="alarmpane theme">
         <div>
-            <label for="alon">Weckfunktion aktiv:</label>
-            <input id="alon" type="checkbox" />
+            <label for="alact">Weckfunktion aktiv:</label>
+            <input id="alact" type="checkbox" />
         </div>
         <div>&nbsp;</div>
         <div>

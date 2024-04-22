@@ -306,7 +306,7 @@ void showClock() {
     updateTime(true);
     if (radio) showRadio();
     //Only show next alarm if alarms are on and some alarm ist set for some day.
-    if (alarmon && (alarmday < 8)) showNextAlarm();
+    if (alarmsActive && (alarmday < 8)) showNextAlarm();
 }
 
 //select a station from the stationlist
@@ -365,15 +365,15 @@ void toggleRadio(boolean off) {
 //turn the alarm on or off
 void toggleAlarm() {
   Serial.println("Toggeling alarm...");
-  if (alarmon){
-    alarmon = false;
+  if (alarmsActive){
+    alarmsActive = false;
   } else {
-    alarmon = true;
+    alarmsActive = true;
     //Scan for next alarm
     findNextAlarm();
   }
-  Serial.printf("Storing alarmon = %s\n", alarmon ? "true" : "false");
-  pref.putBool("alarmon",alarmon);
+  Serial.printf("Storing alarmsActive = %s\n", alarmsActive ? "true" : "false");
+  pref.putBool("alarmsActive",alarmsActive);
   
   // Redraw buttons 
   drawButtons();
@@ -590,7 +590,7 @@ void drawButtons(){
     // Draw images of buttons at the bottom.
     tft.drawRGBBitmap(0,176,knopfimg,320,64);
     // Draw red diagonal line over Alarm clock symbol if Alarms ar off
-    if(!alarmon){
+    if(!alarmsActive){
       int16_t kx1 = 133;  //Top left corner of alarm clock button.
       int16_t ky1 = 176+4;  //Top left corner of alarm clock button.
       int16_t kx2 = 187;  //Bottom right corner of alarm clock button.
