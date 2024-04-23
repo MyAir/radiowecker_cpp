@@ -49,6 +49,7 @@ String ntp = "de.pool.ntp.org";   //NTP server url
 uint8_t curStation = 0;           //index for current selected station in stationlist
 uint8_t curGain = 200;            //current loudness
 uint8_t snoozeTime = 30;          //snooze time in minutes
+uint16_t alarmDuration = 30;      //duration of alarm in minutes without interaction until it's autmatically turned off.
 boolean alarmsActive = false;     //flag if all alarms are active or not
 boolean alarm1Active  = false;    //flag if first alarm is active or not
 uint16_t alarm1 = 390;            //first alarm time 6:30
@@ -218,6 +219,8 @@ void setup() {
   if (pref.isKey("gain")) curGain = pref.getUShort("gain");
   snoozeTime = 30; //default value
   if (pref.isKey("snooze")) snoozeTime = pref.getUShort("snooze");
+  alarmDuration = 30; //default value
+  if (pref.isKey("aladur")) alarmDuration = pref.getUInt("aladur");
   bright = 80; //default value
   if (pref.isKey("bright")) bright = pref.getUShort("bright");
   if (pref.isKey("alarmsActive")) alarmsActive = pref.getBool("alarmsActive");
@@ -366,6 +369,8 @@ void loop() {
       //MyAir: Remove second alarmtime+1 as ticker should be set within the same minute now.
       //if ((alarmday == weekday) && ((minutes == alarmtime) || (minutes == (alarmtime+1)))) {
       if ((alarmday == weekday) && (minutes == alarmtime)) {
+        // Set snooze Timer so alarm does not sound longer than snooze time.
+        snoozeWait = alarmDuration;
         toggleRadio(false);
         showRadio();
         findNextAlarm();

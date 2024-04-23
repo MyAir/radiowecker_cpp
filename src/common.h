@@ -47,6 +47,7 @@ extern String ntp;                  //NTP server url
 extern uint8_t curStation ;         //index for current selected station in stationlist
 extern uint8_t curGain ;            //current loudness
 extern uint8_t snoozeTime ;         //snooze time in minutes
+extern uint16_t alarmDuration ;     //duration of alarm in minutes without interaction until it's autmatically turned off.
 extern boolean alarmsActive ;       //flag if alarms are turend on or off
 extern boolean alarm1Active ;       //flag if first alarm is active or not
 extern uint16_t alarm1 ;            //first alarm time 6:30

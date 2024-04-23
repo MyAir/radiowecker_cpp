@@ -103,7 +103,7 @@ void getAccessData() {
 
 //AJAX command /cmd/getalarms
 void getAlarms() {
-  char buf[47];
+  char buf[60];
   uint8_t h,m,mask,i;
   h = alarm1 /60;
   m = alarm1 % 60;
@@ -120,24 +120,25 @@ void getAlarms() {
   }
   /*
     MyAir Note: Message format from getAlarms (each row followed by 1 byte newline):
-    al0: Alarmtime1 hh:mm 
-    al1: So 1/0
-    al2: Mo 1/0
+    al0:   Alarmtime1 hh:mm 
+    al1:   So 1/0
+    al2:   Mo 1/0
     ..
-    al8: Sa 1/0
-    al9: Alarmtime2 hh:mm
-    al10: So 1/0
-    al11: Mo 1/0
+    al8:   Sa 1/0
+    al9:   Alarmtime2 hh:mm
+    al10:   So 1/0
+    al11:   Mo 1/0
     ..
-    al15: Sa 1/0
-    alact: alarmsActive 1/0
+    al15:   Sa 1/0
+    alact:  alarmsActive 1/0
     al1act: alarm1Active 1/0
     al2act: alarm2Active 1/0
+    aladur: alarmDuration 999
     HEX 00 (null terminated string)
     BUF:
-    0         1         2         3         4  
-    01234567890123456789012345678901234567890123456
-    hh:mmn0n1n2n3n4n5n6nhh:mmn0n1n2n3n4n5n6nan1n2n0
+    0         1         2         3         4         5  
+    012345678901234567890123456789012345678901234567890
+    hh:mmn0n1n2n3n4n5n6nhh:mmn0n1n2n3n4n5n6nan1n2n999n0
   */
   if (alarmsActive){
     buf[40] = '1';
@@ -157,7 +158,8 @@ void getAlarms() {
     buf[44] = '0';
   }
   buf[45] = '\n';
-  buf[46] = 0;
+  sprintf(&buf[46],"%03i\n",alarmDuration);
+  buf[50] = 0;
   //send access data separated by new line
   //respond with access data
   server.send(200,"text/plain",String(buf));
@@ -248,6 +250,13 @@ void setAlarms() {
   pref.putUShort("alarmday1",alarmday1);
   Serial.printf("storing 'al9-15' arguments as %03i (0x'%02x') in 'alarmday2'\n", alarmday2, alarmday2);
   pref.putUShort("alarmday2",alarmday2);
+
+  if (server.hasArg("aladur")) {
+    Serial.printf("storing argument 'aladur' = '%s' as '%i' in 'alarmDuration'\n", server.arg("aladur"),server.arg("aladur").toInt(), alarmDuration);
+    alarmDuration = server.arg("aladur").toInt();
+    pref.putUInt("aladur",alarmDuration);
+  }
+
   findNextAlarm();
   //if (clockmode) showNextAlarm();
   if (clockmode) showClock();

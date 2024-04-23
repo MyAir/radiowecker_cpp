@@ -154,35 +154,34 @@ const char MAIN_page[] PROGMEM = R"=====(
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
-                    for (var i = 0; i < 19; i++) {
+                    for (var i = 0; i < 20; i++) {
                         if ((i == 0) || (i == 8)) {
                             $("#al" + i).val(parts[i]);
-                        } else {
-                            if (parts[i] == '1') {
-                                $("#al" + i).prop('checked', true);
-                            } else {
-                                $("#al" + i).prop('checked', false);
-                            }
-                        }
-                        if (i == 16) {
+                        } else if (i == 16) {
                             if (parts[i] == '1') {
                                 $("#alact").prop('checked', true);
                             } else {
                                 $("#alact").prop('checked', false);
                             }
-                        }
-                        if (i == 17) {
+                        } else if (i == 17) {
                             if (parts[i] == '1') {
                                 $("#al1act").prop('checked', true);
                             } else {
                                 $("#al1act").prop('checked', false);
                             }
-                        }
-                        if (i == 18) {
+                        } else if (i == 18) {
                             if (parts[i] == '1') {
                                 $("#al2act").prop('checked', true);
                             } else {
                                 $("#al2act").prop('checked', false);
+                            }
+                        } else if (i == 19) {
+                            $("#aladur").val(parseInt(parts[i]));
+                        }else {
+                            if (parts[i] == '1') {
+                                $("#al" + i).prop('checked', true);
+                            } else {
+                                $("#al" + i).prop('checked', false);
                             }
                         }
                     }
@@ -210,9 +209,10 @@ const char MAIN_page[] PROGMEM = R"=====(
                     vals['al' + i] = $("#al" + i).prop("checked") ? '1' : '0';
                 }
             }
-            vals['alact'] = $("#alact").prop("checked") ? '1' : '0';
+            vals['alact']  = $("#alact").prop("checked") ? '1' : '0';
             vals['al1act'] = $("#al1act").prop("checked") ? '1' : '0';
             vals['al2act'] = $("#al2act").prop("checked") ? '1' : '0';
+            vals['aladur']  = $("#aladur").val();
 
             $.ajax({
                 type: "GET",
@@ -231,7 +231,16 @@ const char MAIN_page[] PROGMEM = R"=====(
                 data: {},
             });
         }
-
+        function enforceMinMax(el) {
+            if (el.value != "") {
+                if (parseInt(el.value) < parseInt(el.min)) {
+                el.value = el.min;
+                }
+                if (parseInt(el.value) > parseInt(el.max)) {
+                el.value = el.max;
+                }
+            }
+        }
     </script>
     <style>
         body {
@@ -308,6 +317,15 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div>
             <label for="alact">Weckfunktion eingeschaltet:</label>
             <input id="alact" type="checkbox" />
+        </div>
+        <div>
+            <label for="aladur">Alarm Dauer:</label>
+            <input id="aladur" type="number" min="0" max="999" class="numinput" 
+            onkeyup=enforceMinMax(this)
+            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            type = "number"
+            maxlength = "3"/>
+            <label>min (0=Endlos)</label>
         </div>
         <div>&nbsp;</div>
         <div>
@@ -562,35 +580,34 @@ const char MAIN_page[] PROGMEM = R"=====(
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
-                    for (var i = 0; i < 19; i++) {
+                    for (var i = 0; i < 20; i++) {
                         if ((i == 0) || (i == 8)) {
                             $("#al" + i).val(parts[i]);
-                        } else {
-                            if (parts[i] == '1') {
-                                $("#al" + i).prop('checked', true);
-                            } else {
-                                $("#al" + i).prop('checked', false);
-                            }
-                        }
-                        if (i == 16) {
+                        } else if (i == 16) {
                             if (parts[i] == '1') {
                                 $("#alact").prop('checked', true);
                             } else {
                                 $("#alact").prop('checked', false);
                             }
-                        }
-                        if (i == 17) {
+                        } else if (i == 17) {
                             if (parts[i] == '1') {
                                 $("#al1act").prop('checked', true);
                             } else {
                                 $("#al1act").prop('checked', false);
                             }
-                        }
-                        if (i == 18) {
+                        } else if (i == 18) {
                             if (parts[i] == '1') {
                                 $("#al2act").prop('checked', true);
                             } else {
                                 $("#al2act").prop('checked', false);
+                            }
+                        } else if (i == 19) {
+                            $("#aladur").val(parseInt(parts[i]));
+                        }else {
+                            if (parts[i] == '1') {
+                                $("#al" + i).prop('checked', true);
+                            } else {
+                                $("#al" + i).prop('checked', false);
                             }
                         }
                     }
@@ -618,9 +635,10 @@ const char MAIN_page[] PROGMEM = R"=====(
                     vals['al' + i] = $("#al" + i).prop("checked") ? '1' : '0';
                 }
             }
-            vals['alact'] = $("#alact").prop("checked") ? '1' : '0';
+            vals['alact']  = $("#alact").prop("checked") ? '1' : '0';
             vals['al1act'] = $("#al1act").prop("checked") ? '1' : '0';
             vals['al2act'] = $("#al2act").prop("checked") ? '1' : '0';
+            vals['aladur']  = $("#aladur").val();
 
             $.ajax({
                 type: "GET",
@@ -639,7 +657,16 @@ const char MAIN_page[] PROGMEM = R"=====(
                 data: {},
             });
         }
-
+        function enforceMinMax(el) {
+            if (el.value != "") {
+                if (parseInt(el.value) < parseInt(el.min)) {
+                el.value = el.min;
+                }
+                if (parseInt(el.value) > parseInt(el.max)) {
+                el.value = el.max;
+                }
+            }
+        }
     </script>
     <style>
         body {
@@ -716,6 +743,15 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div>
             <label for="alact">Weckfunktion eingeschaltet:</label>
             <input id="alact" type="checkbox" />
+        </div>
+        <div>
+            <label for="aladur">Alarm Dauer:</label>
+            <input id="aladur" type="number" min="0" max="999" class="numinput" 
+            onkeyup=enforceMinMax(this)
+            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            type = "number"
+            maxlength = "3"/>
+            <label>min (0=Endlos)</label>
         </div>
         <div>&nbsp;</div>
         <div>
