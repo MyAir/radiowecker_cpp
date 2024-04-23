@@ -318,15 +318,6 @@ const char MAIN_page[] PROGMEM = R"=====(
             <label for="alact">Weckfunktion eingeschaltet:</label>
             <input id="alact" type="checkbox" />
         </div>
-        <div>
-            <label for="aladur">Alarm Dauer:</label>
-            <input id="aladur" type="number" min="0" max="999" class="numinput" 
-            onkeyup=enforceMinMax(this)
-            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-            type = "number"
-            maxlength = "3"/>
-            <label>min (0=Endlos)</label>
-        </div>
         <div>&nbsp;</div>
         <div>
             <label for="al0">Weckerzeit 1:</label>
@@ -384,6 +375,16 @@ const char MAIN_page[] PROGMEM = R"=====(
                     <td><input id="al9" type="checkbox" /></td>
                 </tr>
             </table>
+        </div>
+        <div>&nbsp;</div>
+        <div>
+            <label for="aladur">Alarm Dauer:</label>
+            <input id="aladur" type="number" min="0" max="999" class="numinput" 
+            onkeyup=enforceMinMax(this)
+            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            type = "number"
+            maxlength = "3"/>
+            <label>min (0=Endlos)</label>
         </div>
         <div style="padding-top:10px;text-align:center">
             <button id="btn_savealarm" type="button">Speichern</button>
@@ -744,15 +745,6 @@ const char MAIN_page[] PROGMEM = R"=====(
             <label for="alact">Weckfunktion eingeschaltet:</label>
             <input id="alact" type="checkbox" />
         </div>
-        <div>
-            <label for="aladur">Alarm Dauer:</label>
-            <input id="aladur" type="number" min="0" max="999" class="numinput" 
-            onkeyup=enforceMinMax(this)
-            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-            type = "number"
-            maxlength = "3"/>
-            <label>min (0=Endlos)</label>
-        </div>
         <div>&nbsp;</div>
         <div>
             <label for="al0">Weckerzeit 1:</label>
@@ -810,6 +802,16 @@ const char MAIN_page[] PROGMEM = R"=====(
                     <td><input id="al9" type="checkbox" /></td>
                 </tr>
             </table>
+        </div>
+        <div>&nbsp;</div>
+        <div>
+            <label for="aladur">Alarm Dauer:</label>
+            <input id="aladur" type="number" min="0" max="999" class="numinput" 
+            onkeyup=enforceMinMax(this)
+            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            type = "number"
+            maxlength = "3"/>
+            <label>min (0=Endlos)</label>
         </div>
         <div style="padding-top:10px;text-align:center">
             <button id="btn_savealarm" type="button">Speichern</button>
