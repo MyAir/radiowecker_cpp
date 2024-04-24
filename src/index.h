@@ -379,11 +379,14 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div>&nbsp;</div>
         <div>
             <label for="aladur">Alarm Dauer:</label>
-            <input id="aladur" type="number" min="0" max="999" class="numinput" 
-            onkeyup=enforceMinMax(this)
-            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-            type = "number"
-            maxlength = "3"/>
+            <input id="aladur" 
+                class="numinput" 
+                type="number" 
+                min="0" max="254" 
+                maxlength = "3"
+                onkeyup=enforceMinMax(this)
+                oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            />
             <label>min (0=Endlos)</label>
         </div>
         <div style="padding-top:10px;text-align:center">
@@ -806,11 +809,14 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div>&nbsp;</div>
         <div>
             <label for="aladur">Alarm Dauer:</label>
-            <input id="aladur" type="number" min="0" max="999" class="numinput" 
-            onkeyup=enforceMinMax(this)
-            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-            type = "number"
-            maxlength = "3"/>
+            <input id="aladur" 
+                class="numinput" 
+                type="number" 
+                min="0" max="254" 
+                maxlength = "3"
+                onkeyup=enforceMinMax(this)
+                oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            />
             <label>min (0=Endlos)</label>
         </div>
         <div style="padding-top:10px;text-align:center">
