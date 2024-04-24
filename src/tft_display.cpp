@@ -551,7 +551,7 @@ void showBrigthness() {
 
 //display the area to show the snooze time on config screen
 void showSnoozeTime() {
-  char txt[20];
+  char txt[25];
   tft.fillRect(0,88,320,44,ILI9341_LIGHTGREY);
   tft.drawRect(0,88,320,44,ILI9341_BLUE);
   sprintf(txt,"%i min",snoozeTime);

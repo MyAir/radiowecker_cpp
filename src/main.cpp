@@ -343,12 +343,8 @@ void loop() {
     if (connected  && getLocalTime(&ti)) {
       minutes = ti.tm_hour * 60 + ti.tm_min;
       weekday = ti.tm_wday;
-    //MyAir Note: Remove Disconnect handling as it's already handled (properly) before.
-    //} else {
-    //  connected = false;
-    //  discon = millis();
     }
-    //set BG light if clockk is displayed
+    //set BG light if clock is displayed
     if (connected && clockmode) {
       setBGLight(bright);
       displayDateTime();
@@ -366,8 +362,6 @@ void loop() {
     //if an alarm is activated check for day and time
     if ((alarmsActive) && (alarmday < 8) && getLocalTime(&ti)) {
       //if alarm day and time is reached turn radio on and get values for next expected alarm
-      //MyAir: Remove second alarmtime+1 as ticker should be set within the same minute now.
-      //if ((alarmday == weekday) && ((minutes == alarmtime) || (minutes == (alarmtime+1)))) {
       if ((alarmday == weekday) && (minutes == alarmtime)) {
         // Set snooze Timer so alarm does not sound longer than snooze time.
         snoozeWait = alarmDuration;
