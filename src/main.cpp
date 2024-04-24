@@ -1,3 +1,4 @@
+#include <credentials.h>
 #include <Arduino.h>
 #include <WiFi.h> 
 #include <ArduinoOTA.h>
@@ -43,8 +44,8 @@ uint8_t             _resetResaon = (esp_reset_reason_t) ESP_RST_UNKNOWN;
 
 Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
-String ssid = "xxxxx";            //ssid for WLAN connection
-String pkey = "yyyyy";   //passkey for WLAN connection
+String ssid = MY_SSID;            //ssid for WLAN connection
+String pkey = MY_PKEY;            //passkey for WLAN connection
 String ntp = "de.pool.ntp.org";   //NTP server url
 uint8_t curStation = 0;           //index for current selected station in stationlist
 uint8_t curGain = 200;            //current loudness
@@ -182,6 +183,7 @@ void setup() {
   sleep(5);
   #endif
   Serial.begin(115200);
+  //Serial.printf("ssid = %s, pkey= %s \n", ssid.c_str(), pkey.c_str());
   Serial.println("Load preferences");
   Serial.printf("Total heap: %d\n", ESP.getHeapSize());
   Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
@@ -206,7 +208,7 @@ void setup() {
   }
   Serial.printf("RESET_REASON: %s", rr);
   Serial.print("\n\n");
-
+  
   title[0] = 0;
   //preferences will be saved in the EPROM of the ESP32 to keep the values 
   //when power supply will be interrupted
