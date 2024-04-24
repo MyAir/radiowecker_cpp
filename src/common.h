@@ -59,7 +59,7 @@ extern uint8_t actStation;          //index for current station in station list 
 extern uint8_t bright ;             //brightness in percent. 0 means use LDR to control brightness
 //other global variables
 extern uint32_t lastchange;         //time of last selection change
-extern uint8_t snoozeWait ;         //remaining minutes fro snooze
+extern uint8_t snoozeWait ;         //remaining minutes until radio is turned off due to snooze
 extern uint16_t alarmtime ;         //next relevant alarm time
 extern uint8_t alarmday ;           //weekday for next relevant alarm or 8 means alarm disabled
 extern char title[64];              //character array to hold meta data message
@@ -74,11 +74,13 @@ extern uint32_t start_conf;         //time of entering config screen
 extern boolean connected;           //flag to signal active connection
 extern boolean radio ;              //flag to signal radio output
 extern boolean clockmode;           //flag to signal clock is shown on the screen
+extern boolean alarmTripped;        //flag to signal that an alarm has started radio playback
+extern uint8_t alarmRestartWait;    //remaining minutes until radio is restarted due to alarm-snooze
 
 //predefined function from modul tft_display.ino
 void displayMessage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text, uint8_t align = ALIGNLEFT, boolean big = false, uint16_t fc = ILI9341_WHITE , uint16_t bg = ILI9341_BLACK, uint8_t lines = 1 );
 void findNextAlarm();  //main.cpp
-void showNextAlarm();  //tft_display.cpp
+void displayAlarmState();  //tft_display.cpp
 void saveList(); //websrvr.cpp
 void reorder(uint8_t oldpos, uint8_t newpos);
 void stopPlaying();

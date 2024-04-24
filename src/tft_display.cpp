@@ -304,9 +304,8 @@ void showClock() {
     setBGLight(bright);
     tft.fillScreen(ILI9341_BLACK);
     updateTime(true);
-    if (radio) showRadio();
-    //Only show next alarm if alarms are on and some alarm ist set for some day.
-    if (alarmsActive && (alarmday < 8)) showNextAlarm();
+    if (radio) showRadio(); //showClock: Display radio 
+    displayAlarmState(); //showClock: Display next alarm or message that radio is turned back on/off
 }
 
 //select a station from the stationlist
@@ -338,14 +337,40 @@ void selectStation(uint16_t x) {
   updateStation();
 }
 
-//turn the radio on or off
+//Radio is toggeled from TFT:
+void TFTtoggleRadio(boolean off) {
+  // Check if an alarm was tripped
+  if (alarmTripped) { //Radio is toggled when in alarm mode:
+    // An alarm was tripped so we turn the radio off and display the next alarm:
+    if (radio) { //Turn off radio if it is running.
+      toggleRadio(true); //TFTtoggleRadio: Turn radio off
+    } 
+    // Clear alrm flags and snooze/restart timers.
+    alarmTripped = false; //TFTtoggleRadio: Clear alarmTripped in case alarm timeout has been reached.
+    alarmRestartWait = 0; //TFTtoggleRadio: clear alarm-snooze time.
+    snoozeWait = 0; //TFTtoggleRadio: Clear sleepIn-snooze time.
+    findNextAlarm(); //TFTtoggleRadio: Find next active alarm.
+  } else { //Radio is toggeled in non-alarm mode:
+    //No Alarm was tripped:
+    toggleRadio(off);   //Toggle radio on/off
+    if (!radio){ //Radio is now turned off.
+      snoozeWait = 0; //TFTtoggleRadio non-alarm: Clear sleepIn-snooze time.
+    }
+  }
+  clockmode = true; //TFTtoggleRadio: Switch bach to clock mode.
+  showClock(); //TFTtoggleRadio: Display clock and next alarm if there is any.
+}
+
+//Radio is toggled from some function:
 void toggleRadio(boolean off) {
+  //Turn radio on or off:
   if (off) {
-    //if off stop the stream
-    stopPlaying();
+    //Turn radio off:
+    stopPlaying(); //Stop the stream
     radio = false;
-    //setGain(0);
+    setGain(0);  //Set volume to zero.
   } else {
+    // Turn radio on:
     if (connected) {
       //if on start the stream an set the gain
       radio = true;
@@ -354,12 +379,9 @@ void toggleRadio(boolean off) {
         actStation = 0;
         startUrl(String(stationlist[actStation].url));
       }
-      setGain(curGain);
+      setGain(curGain);  //Set volume to configured volume.
     }
   }
-  //switch to clock screen
-  clockmode = true;
-  showClock();
 }
 
 //turn the alarm on or off
@@ -381,14 +403,26 @@ void toggleAlarm() {
   }
 
 void startSnooze() {
-  snoozeWait = snoozeTime;
-  toggleRadio(false);
-  clockmode = true;
-  showClock();
+  //Snooze button was pressed on TFT:
+  //Check if an alarm was tripped.
+  if (alarmTripped){
+    // an alarm was tripped:
+    toggleRadio(true);  // startSnooze: Turn radio off.
+    alarmRestartWait = snoozeTime;  // startSnooze: Set alarmRestartWait timer.
+    snoozeWait = 0;  // startSnooze: clear sleepIn snooze timer.
+  } else {
+    // No Alarm was tripped:
+    if (!radio) {toggleRadio(false);}  // startSnooze: Turn radio on if not already on.
+    snoozeWait = snoozeTime;  // startSnooze: Set sleepIn radio-off timer.
+    alarmRestartWait = 0;  // startSnooze: Clear alarmRestartWait timer.
+  }
+  clockmode = true; //startSnooze: Switch back to clock mode.
+  showClock(); //startSnooze: Display clock.
 }
 
-//set the selected station as the active station
+//Change Station button was pressed on TFT:
 void changeStation() {
+    //set the selected station as the active station
     actStation = curStation;
     //save the new value and start stream
     pref.putUShort("station",curStation);
@@ -397,9 +431,9 @@ void changeStation() {
       actStation = 0;
       startUrl(String(stationlist[actStation].url));
     }
-  //switch to clock screen
-  clockmode = true;
-  showClock();
+  //switch back to clock screen
+  clockmode = true; //changeStation: Switch bach to clock mode.
+  showClock(); //changeStation: Display clock.
 }
 
 //called from the main loop to handle touch events
@@ -419,13 +453,14 @@ void onTouchClick(TS_Point p) {
     //we are in the config mode
     if (p.y > 180) { //if the y value > 180, we are in the button area
       //we nned the p.x position to find which button was clicked
-      if (p.x < 64) toggleRadio(radio);
-      if ((p.x>64) && (p.x<128)) startSnooze();
-      if ((p.x>128) && (p.x<192)) toggleAlarm();
-      if ((p.x>192) && (p.x<256)) changeStation();
-      if (p.x > 256) {
-        clockmode = true;
-        showClock();
+      if (p.x < 64) TFTtoggleRadio(radio);  //TFT Toggle radio was pressed.
+      if ((p.x>64) && (p.x<128)) startSnooze(); //TFT Snooze was pressed.
+      if ((p.x>128) && (p.x<192)) toggleAlarm(); //TFT Toggle Alarm was pressed.
+      if ((p.x>192) && (p.x<256)) changeStation(); //TFT Change station was pressed.
+      if (p.x > 256) { //TFT Back button was pressed.
+        //switch back to clock screen
+        clockmode = true; //changeStation: Switch bach to clock mode.
+        showClock(); //changeStation: Display clock.
       }
     }
     //from 0 to 44 we have the slider for gain
@@ -604,14 +639,25 @@ void drawButtons(){
 }
 //if an alarm is active, the next alarm date and time will be displayed
 //on the bottom line of clock screen
-void showNextAlarm(){
+void displayAlarmState(){
   char txt[100] = "";
   uint8_t h,m;
-  if (clockmode && (alarmday < 8)) {
-    h = alarmtime / 60;
-    m = alarmtime % 60;
-    sprintf(txt,"Wecker: %s um %02d:%02d",days[alarmday],h,m);
-    textInBox(0,220,320,20,txt,ALIGNCENTER,false,0xC000,ILI9341_BLACK,1);
+  // Only show next alrm if in Clock/Radio mode, alarm function is active an an active alarm was found.
+  if ((snoozeWait == 0) && (alarmRestartWait == 0)){
+    if (clockmode && alarmsActive && (alarmday < 8)) {
+      h = alarmtime / 60;
+      m = alarmtime % 60;
+      sprintf(txt,"Wecker: %s um %02d:%02d",days[alarmday],h,m);
+      textInBox(0,220,320,20,txt,ALIGNCENTER,false,0xC000,ILI9341_BLACK,1);
+    }
+  } else if (snoozeWait > 0){
+    //Display message that radio will be turned off.
+    sprintf(txt,"Radio wird in %i min. ausgeschaltet",snoozeWait);
+    textInBox(0,220,320,20,txt,ALIGNCENTER,false,ILI9341_ORANGE,ILI9341_BLACK,1);
+  } else { // alarmRestartWait > 0
+    //Display message that alarm will be restarted.
+    sprintf(txt,"Wecker neustart in %i min.",alarmRestartWait);
+    textInBox(0,220,320,20,txt,ALIGNCENTER,false,ILI9341_ORANGE,ILI9341_BLACK,1);
   }
 }
 

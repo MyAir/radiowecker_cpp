@@ -61,7 +61,7 @@ uint8_t actStation = 0;           //index for current station in station list us
 uint8_t bright = 25;              //brightness in percent. 0 means use LDR to control brightness
 //other global variables
 uint32_t lastchange = 0;          //time of last selection change
-uint8_t snoozeWait = 0;           //remaining minutes fro snooze
+uint8_t snoozeWait = 0;           //remaining minutes until radio is turned off due to snooze
 uint16_t alarmtime = 0;           //next relevant alarm time
 uint8_t alarmday = 8;             //weekday for next relevant alarm or 8 means alarm disabled
 char title[64];                   //character array to hold meta data message
@@ -76,11 +76,13 @@ uint32_t start_conf;              //time of entering config screen
 boolean connected;                //flag to signal active connection
 boolean radio = false;            //flag to signal radio output
 boolean clockmode = true;         //flag to signal clock is shown on the screen
+boolean alarmTripped = false;     //flag to signal that an alarm has started radio playback
+uint8_t alarmRestartWait = 0;     //remaining minutes until radio is restarted due to alarm-snooze
 
 //predefined function from modul tft_display.ino
 void displayMessage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text, uint8_t align = ALIGNLEFT, boolean big = false, uint16_t fc = ILI9341_WHITE , uint16_t bg = ILI9341_BLACK, uint8_t lines = 1 );
 void findNextAlarm();  //main.cpp
-void showNextAlarm();  //tft_display.cpp
+void displayAlarmState();  //tft_display.cpp
 void saveList(); //websrvr.cpp
 void reorder(uint8_t oldpos, uint8_t newpos);
 void stopPlaying();
@@ -119,7 +121,7 @@ void findNextAlarm() {
       //     if alarm1 was found for today in the future but an earlier alarm2 is also set for today in the future. 
       if (((alarmday == 8) && ((alarmday2 & mask) != 0) && (alarm2 > minutes) ) ||
           ((alarmday != 8) && ((alarmday2 & mask) != 0) && (alarm2 > minutes) && (alarm2 < alarm1)))
-      { alarmtime = alarm2; alarmday = wd;}
+        { alarmtime = alarm2; alarmday = wd;}
     }
 
     //if no future alarms were found today, search the next weekdays until weekday before today:
@@ -135,7 +137,7 @@ void findNextAlarm() {
           //Alarm1 is active.
 
           //Test if alarm1 is set for this day.
-        if ((alarmday == 8) && ((alarmday1 & mask) != 0) ) { alarmtime = alarm1; alarmday = wd;}
+          if ((alarmday == 8) && ((alarmday1 & mask) != 0) ) { alarmtime = alarm1; alarmday = wd;}
         }
         //Test if alarm2 is active.
         if (alarm2Active){
@@ -241,7 +243,7 @@ void setup() {
   if (pref.isKey("station")) curStation = pref.getUShort("station");
   if (curStation >= STATIONS) curStation = 0; //check to avoid invalid station number
   actStation = curStation;   //set active station to current station 
-Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
+  Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
   //run setup functions in the sub parts
   setup_audio(); //setup audio streams
   setup_display(); //setup display interface
@@ -263,10 +265,9 @@ Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssi
     minutes = ti.tm_hour * 60 + ti.tm_min;
     weekday = ti.tm_wday;
     Serial.println("Start");
-    //if alarms are active get date and time for next alarm
-    if (alarmsActive) findNextAlarm();
-    //Display time and next alarm if one is set
-    showClock();
+    findNextAlarm(); //Setup: Find next alarm.
+    showClock(); //Setup: Display time and alarm state.
+    
   } else { //connection not successful
     //we have no connection. A message will be shown on the display
     displayClear();
@@ -298,8 +299,8 @@ void loop() {
   touch_loop();
   //after 10 seconds switch back from config screen to clock screen
   if (!clockmode && ((millis() - start_conf) > 10000)) {
-    clockmode = true;
-    showClock();
+    clockmode = true; //Display timeout: Switch bach to clock mode.
+    showClock(); //Display timeout: Show clock and alarm state.
   }
   //show metadata if radio is active
   if (newTitle && radio && clockmode) {
@@ -349,30 +350,52 @@ void loop() {
       setBGLight(bright);
       displayDateTime();
     }
-    //if we are in snooze mode decrement snooze counter
-    //and turn radio off if snooze counter is zero
-    if (snoozeWait > 0) {
-      snoozeWait--;
-      if (snoozeWait == 0) {
-        toggleRadio(true);
-        showRadio();
-      }
-      
-    }
-    //if an alarm is activated check for day and time
-    if ((alarmsActive) && (alarmday < 8) && getLocalTime(&ti)) {
-      //if alarm day and time is reached turn radio on and get values for next expected alarm
-      if ((alarmday == weekday) && (minutes == alarmtime)) {
-        // Set snooze Timer so alarm does not sound longer than snooze time.
-        snoozeWait = alarmDuration;
-        toggleRadio(false);
-        showRadio();
-        findNextAlarm();
-        showNextAlarm();
+
+    // Snooze Timer: Turn radio off once snoozeWait is back to zero or display message at what time it's being turend off.
+    if (snoozeWait > 0) { //Radio should be turned off soon:
+      snoozeWait--; //Decrease snoonzeWait by 1 minute.
+      if (snoozeWait == 0) { //Radio should be turned off now:
+        toggleRadio(true); //snoozeWait timeout: Turn radio off.
+        if (alarmTripped) { //Radio was turned off due to alarm timeout:
+          // Clear alarm flags.
+          alarmTripped = false; // snoozeWait alarm-timeout: Clear alarmTripped in case alarm timeout has been reached.
+          alarmRestartWait = 0; // snoozeWait alarm-timeout: clear alarm-snooze time.
+          findNextAlarm(); //snoozeWait alarm-timeout: Search for next alarm.
+        }
+        showClock(); //snoozeWait: Display clock and alarm state.
+      } else { //Radio should be turned off but not yet:
+        displayAlarmState(); //snoozeWait: Display alarm state.
       }
     }
 
-  }
+    //Alarm-Restart timer: Restart alarm if alarm-snooze is active:
+    if (alarmRestartWait > 0) { //The alarm should be restarted soon:
+      alarmRestartWait--; //Decrease restart timer by 1 minute.
+      if (alarmRestartWait == 0) { //Alarm shoud be restarted now:
+        snoozeWait = alarmDuration; //alarmRestartWait: Set snooze time for auto-turnOff.
+        toggleRadio(false); // alarmRestartWait: Turn radio back on.
+        showClock();  //Display clock, radio and alarm state.
+      } else { //Alarm shoud be restarted but not yet:
+        displayAlarmState(); //alarmStateWait: Display when alarm is reactivated.
+      }
+    }
+
+    //Alarm trigger:
+    //if alrms are active and an active alarm was found, check for day and time.
+    if ((alarmsActive) && (alarmday < 8) && getLocalTime(&ti)) {
+      //if alarm day and time is reached turn radio on and get values for next expected alarm
+      if ((alarmday == weekday) && (minutes == alarmtime)) {
+        // Set flag that alrm is tripped.
+        alarmTripped = true;
+        // Set snooze Timer so alarm does not sound longer than defined alarm duration.
+        snoozeWait = alarmDuration;
+        // Turn on radio.
+        toggleRadio(false); // Alarm tripped. Turn radio on.
+        showClock();
+      }
+    }
+  } //end if 1 minute timed events.
+
   //do a restart if device was disconnected for more then 5 minutes
   if (!connected && ((millis() - discon) > 300000)) ESP.restart();
 }

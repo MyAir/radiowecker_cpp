@@ -258,7 +258,6 @@ void setAlarms() {
   }
 
   findNextAlarm();
-  //if (clockmode) showNextAlarm();
   if (clockmode) showClock();
   Serial.println("... completed seting alarms.");
   if (alarmsActive){
