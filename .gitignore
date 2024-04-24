@@ -4,3 +4,4 @@
 .vscode/launch.json
 .vscode/ipch
 docs/TFT_Combiner_KiCad/Radiowecker-backups
+src/credentials.h
