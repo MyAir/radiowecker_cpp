@@ -340,7 +340,8 @@ void testStation() {
   //exspects one argument with the url to be tested
   bool ret = true;
   if (server.hasArg("url"))  {
-    ret = startUrl(server.arg("url"));
+    // ret = startUrl(server.arg("url"));
+    ret = audioConnecttohost(server.arg("url").c_str());
   }
   if (ret) {
     //if success respond is OK
@@ -348,7 +349,8 @@ void testStation() {
   } else {
     //if no success switch back to the current station
     //and respond with ERROR
-    startUrl(String(stationlist[actStation].url));
+    // startUrl(String(stationlist[actStation].url));
+    audioConnecttohost((stationlist[actStation].url));
     server.send(300,"text/plain","ERROR");
   }
 }
@@ -356,7 +358,8 @@ void testStation() {
 //AJAX command /cmd/endtest
 void endTest() {
   //switch back to the current station to end the test
-  startUrl(String(stationlist[actStation].url));
+  // startUrl(String(stationlist[actStation].url));
+  connecttohost((stationlist[actStation].url));
   //respond with OK
   server.send(200,"text/plain","OK");
 }

@@ -1,43 +1,44 @@
 #include <credentials.h>
-#include <Arduino.h>
-#include <WiFi.h> 
-#include <ArduinoOTA.h>
-#include "knoepfe.h" //Graphic data for buttons
-#include "Adafruit_ILI9341.h" //Display driver
-#include <XPT2046_Touchscreen.h> //Touchscreen driver
-#include <TouchEvent.h> //Examines touchscreen events
-#include "audio.h"
-#include "tft_display.h"
-#include "stations.h"
-#include "wlan.h"
-#include "ota.h"
-#include "websrvr.h"
+#include <common.h>
+// #include <Arduino.h>
+// #include <WiFi.h> 
+// #include <ArduinoOTA.h>
+// #include "knoepfe.h" //Graphic data for buttons
+// #include "Adafruit_ILI9341.h" //Display driver
+// #include <XPT2046_Touchscreen.h> //Touchscreen driver
+// #include <TouchEvent.h> //Examines touchscreen events
+// #include "audio.h"
+// #include "tft_display.h"
+// #include "stations.h"
+// #include "wlan.h"
+// #include "ota.h"
+// #include "websrvr.h"
 
 
-//esp32 library to save preferences in flash
-#include <Preferences.h>
+// //esp32 library to save preferences in flash
+// #include <Preferences.h>
 
-//definitions for text output alignment
-#define ALIGNLEFT 0
-#define ALIGNCENTER 1
-#define ALIGNRIGHT 2
+// //definitions for text output alignment
+// #define ALIGNLEFT 0
+// #define ALIGNCENTER 1
+// #define ALIGNRIGHT 2
 
-//pin to be used for light sensor
-//#define LDR 36
-#define LDR 2
+// //pin to be used for light sensor
+// //#define LDR 36
+// #define LDR 2
 
 //instance of prefernces
 Preferences pref;
 Preferences sender;
 
 //structure for station list
-typedef struct {
-  char url[150];  //stream url
-  char name[32];  //stations name
-  uint8_t enabled;//flag to activate the station
-} Station;
+// typedef struct {
+//   char url[150];  //stream url
+//   char name[32];  //stations name
+//   uint8_t enabled;//flag to activate the station
+// } Station;
 
-#define STATIONS 30 //number of stations in the list
+// #define STATIONS 30 //number of stations in the list
 
 //gloabal variables
 uint8_t             _resetResaon = (esp_reset_reason_t) ESP_RST_UNKNOWN;
@@ -49,6 +50,7 @@ String pkey = MY_PKEY;            //passkey for WLAN connection
 String ntp = "de.pool.ntp.org";   //NTP server url
 uint8_t curStation = 0;           //index for current selected station in stationlist
 uint8_t curGain = 200;            //current loudness
+uint8_t volumeSet = 21;           //Volume to be set
 uint8_t snoozeTime = 30;          //snooze time in minutes
 uint16_t alarmDuration = 30;      //duration of alarm in minutes without interaction until it's autmatically turned off.
 boolean alarmsActive = false;     //flag if all alarms are active or not
@@ -80,22 +82,66 @@ boolean clockmode = true;         //flag to signal clock is shown on the screen
 boolean alarmTripped = false;     //flag to signal that an alarm has started radio playback
 uint8_t alarmRestartWait = 0;     //remaining minutes until radio is restarted due to alarm-snooze
 
-//predefined function from modul tft_display.ino
-void displayMessage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text, uint8_t align = ALIGNLEFT, boolean big = false, uint16_t fc = ILI9341_WHITE , uint16_t bg = ILI9341_BLACK, uint8_t lines = 1 );
-void findNextAlarm();  //main.cpp
-void displayAlarmState();  //tft_display.cpp
-void saveList(); //websrvr.cpp
-void reorder(uint8_t oldpos, uint8_t newpos);
-void stopPlaying();
-bool startUrl(String url);
-void setStationData();
-void setup_webserver();
-void setGain(float gain);
-void displayClear();
-void setBGLight(uint8_t prct);
-void showProgress(uint32_t prc);
-void toggleRadio(boolean off);
-void showRadio();
+//Schreibfaul Global Variables:
+uint8_t             _cur_Codec = 0;
+uint16_t            _icyBitRate = 0;      // from http response header via event
+uint16_t            _avrBitRate = 0;      // from decoder via getBitRate(true)
+uint16_t            _cur_station = 0;     // current station(nr), will be set later
+uint8_t             _state = 0;          // statemaschine
+uint8_t             _commercial_dur = 0; // duration of advertising
+bool                _f_rtc = false; // true if time from ntp is received
+bool                _f_eof = false;
+bool                _f_eof_alarm = false;
+bool                _f_isWebConnected = false;
+bool                _f_isFSConnected = false;
+bool                _f_irNumberSeen = false;
+bool                _f_newIcyDescription = false;
+bool                _f_newStreamTitle = false;
+bool                _f_newBitRate = false;
+bool                _f_newLogoAndStation = false;
+bool                _f_newCommercial = false;
+String              _station = "";
+String              _stationName_nvs = "";
+String              _stationName_air = "";
+String              _homepage = "";
+String              _filename = "";
+String              _lastconnectedhost = "";
+String              _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
+char                _commercial[25];
+char                _icyDescription[512] = {};
+char                _streamTitle[512] = {};
+char*               _lastconnectedfile = NULL;
+char*               _stationURL = NULL;
+
+RTIME rtc;
+SemaphoreHandle_t mutex_rtc;
+
+void setRTC(const char* TZString) {
+    rtc.stop();
+    _f_rtc = rtc.begin(_TZString.c_str());
+    if(!_f_rtc) {
+        SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
+        ESP.restart();
+    }
+}
+
+
+// //predefined function from modul tft_display.ino
+// void displayMessage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text, uint8_t align = ALIGNLEFT, boolean big = false, uint16_t fc = ILI9341_WHITE , uint16_t bg = ILI9341_BLACK, uint8_t lines = 1 );
+// void findNextAlarm();  //main.cpp
+// void displayAlarmState();  //tft_display.cpp
+// void saveList(); //websrvr.cpp
+// void reorder(uint8_t oldpos, uint8_t newpos);
+// void stopPlaying();
+// bool startUrl(String url);
+// void setStationData();
+// void setup_webserver();
+// void setGain(float gain);
+// void displayClear();
+// void setBGLight(uint8_t prct);
+// void showProgress(uint32_t prc);
+// void toggleRadio(boolean off);
+// void showRadio();
 
 //calculate date and time for next expected alarm
 //set alarmtime to the time on the day and alarmday on weekday for alarm
@@ -208,7 +254,8 @@ void setup() {
   }
   Serial.printf("RESET_REASON: %s", rr);
   Serial.print("\n\n");
-  
+  mutex_rtc = xSemaphoreCreateMutex();
+    
   title[0] = 0;
   //preferences will be saved in the EPROM of the ESP32 to keep the values 
   //when power supply will be interrupted
@@ -247,10 +294,12 @@ void setup() {
   actStation = curStation;   //set active station to current station 
   Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
   //run setup functions in the sub parts
-  setup_audio(); //setup audio streams
+  // setup_audio(); //setup audio streams
+  audioInit();
   setup_display(); //setup display interface
   setup_senderList(); //load station list from preferences
-  setGain(0); //set the current gain
+  // setGain(0); //set the current gain
+  audioSetVolume(0); //set the current gain
   //Try to connect WLAN show progress on display 
   displayClear();
   displayMessage(5, 10, 310, 30, "Connect WLAN", ALIGNCENTER, true, ILI9341_YELLOW, ILI9341_BLACK,1);
@@ -259,10 +308,11 @@ void setup() {
   connected = initWiFi(ssid, pkey);
   if (connected) { //successful connection
     //setup real time clock
-    configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", ntp.c_str());
+    // configTzTime("CET-1CEST,M3.5.0/03,M10.5.0/03", ntp.c_str());
+    setRTC(_TZString.c_str());
     //show date and time and the name of the station
     delay(500);
-    //fill timestarukture ti, minutes and weekday with now
+    //fill timestructure ti, minutes and weekday with now
     getLocalTime(&ti);
     minutes = ti.tm_hour * 60 + ti.tm_min;
     weekday = ti.tm_wday;
@@ -289,6 +339,30 @@ void setup() {
   //subtract no of current seconds from tick count to get first time update on the minute.
   if (connected) tick = tick - (ti.tm_sec * 1000);
   start_conf = 0;
+}
+
+//this function checks if decoder runs
+void audio_loop() {
+  //check if stream has ended normally not on ICY streams
+  if (audioIsRunning()) {
+    // if (!decoder->loop()) {
+    //   decoder->stop();
+    // }
+  } else {
+    //we have an error decoder has stop
+    Serial.printf("MP3 done\n");
+    //to avoid running in the same problem after restart
+    //the station will be set to the first station entry
+    //The first station on the list should be a stable
+    //working URL. Do not use the first entry in the table
+    //for experiments
+    pref.putUShort("station",0);
+
+    // Restart ESP when streaming is done or errored
+    delay(10000);
+
+    ESP.restart();
+  }  
 }
 
 
@@ -323,10 +397,10 @@ void loop() {
     displayMessage(5, 10, 310, 30, "Connection lost", ALIGNCENTER, true, ILI9341_RED, ILI9341_BLACK,1);
   }
   //if radio is on get new stream data
-  if (connected && radio) {
-    audio_loop();
-  }
-  //if brightness is set to 0, brightness will be controlled by ambient light
+  // if (connected && radio) {
+  //   audio_loop();
+  // }
+  // //if brightness is set to 0, brightness will be controlled by ambient light
   if (bright == 0) {
     int16_t tmp = analogRead(LDR);
     int16_t diff = lastldr - tmp;
@@ -401,3 +475,191 @@ void loop() {
   //do a restart if device was disconnected for more then 5 minutes
   if (!connected && ((millis() - discon) > 300000)) ESP.restart();
 }
+
+/*****************************************************************************************************************************************************
+ *                                                                     A U D I O                                                                     *
+ *****************************************************************************************************************************************************/
+void connecttohost(const char* host) {
+    int32_t idx1, idx2;
+    char*   url = nullptr;
+    char*   user = nullptr;
+    char*   pwd = nullptr;
+
+    // clearBitRate();
+    _cur_Codec = 0;
+    //    if(_state == RADIO) clearStreamTitle();
+    _icyBitRate = 0;
+    _avrBitRate = 0;
+
+    idx1 = indexOf(host, "|", 0);
+    // log_i("idx1 = %i", idx1);
+    if(idx1 == -1) { // no pipe found
+        _f_isWebConnected = audioConnecttohost(host);
+        _f_isFSConnected = false;
+        return;
+    }
+    else { // pipe found
+        idx2 = indexOf(host, "|", idx1 + 1);
+        // log_i("idx2 = %i", idx2);
+        if(idx2 == -1) { // second pipe not found
+            _f_isWebConnected = audioConnecttohost(host);
+            _f_isFSConnected = false;
+            return;
+        }
+        else {                         // extract url, user, pwd
+            url = strndup(host, idx1); // extract url
+            user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
+            pwd = strdup(host + idx2 + 1);
+            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd) _f_isWebConnected = audioConnecttohost(url, user, pwd);
+            _f_isFSConnected = false;
+            if(url) free(url);
+            if(user) free(user);
+            if(pwd) free(pwd);
+        }
+    }
+}
+
+/*****************************************************************************************************************************************************
+ *                                                                    E V E N T S                                                                    *
+ *****************************************************************************************************************************************************/
+// Events from audioI2S library
+void audio_info(const char* info) {
+    if(startsWith(info, "Request")) {
+        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
+        return;
+    }
+    if(startsWith(info, "FLAC")) {
+        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
+        return;
+    }
+    if(endsWith(info, "Stream lost")) {
+        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
+        return;
+    }
+    if(startsWith(info, "authent")) {
+        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
+        return;
+    }
+    if(startsWith(info, "StreamTitle=")) { return; }
+    if(startsWith(info, "HTTP/") && info[9] > '3') {
+        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
+        return;
+    }
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
+    {
+        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
+        // SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);
+        return;
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_showstation(const char* info) {
+    _stationName_air = info;
+    if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
+    if(!_cur_station) _f_newLogoAndStation = true;
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_showstreamtitle(const char* info) {
+    strcpy(_streamTitle, info);
+    if(!_f_irNumberSeen) _f_newStreamTitle = true;
+    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
+
+    strncpy(title, info, sizeof(title));
+    title[sizeof(title)-1] = 0;
+    //show the message on the display
+    if(!_f_irNumberSeen) newTitle = true;
+    
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void show_ST_commercial(const char* info) {
+    _commercial_dur = atoi(info) / 1000; // info is the duration of advertising in ms
+    char cdur[10];
+    itoa(_commercial_dur, cdur, 10);
+    if(_f_newCommercial) return;
+    strcpy(_commercial, "Advertising: ");
+    strcat(_commercial, cdur);
+    strcat(_commercial, "s");
+    _f_newCommercial = true;
+    SerialPrintfln("StreamTitle: %s", info);
+}
+void audio_commercial(const char* info) { show_ST_commercial(info); }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
+//     if(startsWith(info, "alarm")) _f_eof_alarm = true;
+//     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
+//     if(_state == PLAYER || _state == PLAYERico) {
+//         if(!_f_playlistEnabled) {
+//             _f_clearLogo = true;
+//             _f_clearStationName = true;
+//         }
+//     }
+//     webSrv.send("SD_playFile=", "end of audiofile");
+//     _f_eof = true;
+//     _f_isFSConnected = false;
+// }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_eof_stream(const char* info) {
+    _f_isWebConnected = false;
+    SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
+    // if(_state == PLAYER || _state == PLAYERico) {
+    //     if(!_f_playlistEnabled) {
+    //         _f_clearLogo = true;
+    //         _f_clearStationName = true;
+    //     }
+    // }
+    // if(_state == DLNA) { showFileName(""); }
+    // _f_eof = true;
+    // _f_isWebConnected = false;
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_lasthost(const char* info) { // really connected URL
+    // if(_f_playlistEnabled) return;
+    // _lastconnectedhost = info;
+    SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
+    // webSrv.send("stationURL=", _lastconnectedhost);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
+    if(strlen(info) > 5) {
+        SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
+        // _homepage = String(info);
+        // if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_icylogo(const char* info) { // if the Radio has a homepage, this event is calling
+    if(strlen(info) > 5) { SerialPrintflnCut("icy-logo:    ", ANSI_ESC_WHITE, info); }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// void audio_id3image(File& audiofile, const size_t APIC_pos, const size_t APIC_size) { SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "Position %i, Size %i bytes", APIC_pos, APIC_size); }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// void audio_oggimage(File& audiofile, std::vector<uint32_t> vec){ //OGG blockpicture
+//     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
+//     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "ogg metadata blockpicture found:");
+//     for(int i = 0; i < vec.size(); i += 2) {
+//         SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07ld, len %05ld", i / 2, (long unsigned int)vec[i], (long unsigned int)vec[i + 1]);
+//     }
+//     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
+// }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_icydescription(const char* info) {
+    strcpy(_icyDescription, info);
+    _f_newIcyDescription = true;
+    if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_bitrate(const char* info) {
+    if(!strlen(info)) return; // guard
+    _icyBitRate = str2int(info) / 1000;
+    _f_newBitRate = true;
+    SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void ftp_debug(const char* info) {
+    if(startsWith(info, "File Name")) return;
+    SerialPrintfln("ftpServer:   %s", info);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void RTIME_info(const char* info) { SerialPrintfln("rtime_info:  %s", info); }

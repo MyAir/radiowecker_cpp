@@ -106,16 +106,25 @@ TouchEvent tevent(touch);
 
 //set the gain for x-position where the slider was clicked
 void setGainValue(uint16_t value) {
+  // Value from TFT = 0..324
   char txt[10];
   //calculate gain from x-Position 0 to 100%
   float v = (value - 15) * 0.345;
+  Serial.printf("Float v =%f\n",v);
   if (v > 100) v = 100;
   if (v < 0) v = 0;
+  Serial.printf("Float v after IF =%f\n",v);
   curGain = v;
+  //Max audioSetVolume is 21. curGain is 0-100%. Compute percentage value of 21.
+  float vs = 21.0 / 100 * curGain;
+  Serial.printf("Float vs  =%f\n",vs);
+  volumeSet = int(vs);
   //save gain and adjust slider and set gain to the new value
   pref.putUShort("gain",curGain);
   showSlider(27,curGain,100);
-  setGain(curGain);
+  // setGain(curGain);
+  Serial.printf("SetGainValue value =%i, curGain =%i audioSetVolume = %i\n",value, curGain, volumeSet);
+  audioSetVolume(volumeSet);
   sprintf(txt,"%i %%",curGain);
   displayMessage(231,8,80,20,txt,ALIGNRIGHT,false,ILI9341_BLACK,ILI9341_LIGHTGREY,1);
 }
@@ -366,20 +375,25 @@ void toggleRadio(boolean off) {
   //Turn radio on or off:
   if (off) {
     //Turn radio off:
-    stopPlaying(); //Stop the stream
+    // stopPlaying(); //Stop the stream
+    audioStopSong();
     radio = false;
-    setGain(0);  //Set volume to zero.
+    // setGain(0);  //Set volume to zero.
+    audioSetVolume(0);
   } else {
     // Turn radio on:
     if (connected) {
       //if on start the stream an set the gain
       radio = true;
-      if (!startUrl(String(stationlist[actStation].url))) {
+      // if (!startUrl(String(stationlist[actStation].url))) {
+      if (!audioConnecttohost((stationlist[actStation].url))) {
         //if no success switch to station 0
         actStation = 0;
-        startUrl(String(stationlist[actStation].url));
+        // startUrl(String(stationlist[actStation].url));
+        audioConnecttohost((stationlist[actStation].url));
       }
-      setGain(curGain);  //Set volume to configured volume.
+      // setGain(curGain);  //Set volume to configured volume.
+      audioSetVolume(curGain);
     }
   }
 }
@@ -426,10 +440,12 @@ void changeStation() {
     actStation = curStation;
     //save the new value and start stream
     pref.putUShort("station",curStation);
-    if (!startUrl(String(stationlist[actStation].url))) {
+    // if (!startUrl(String(stationlist[actStation].url))) {
+    if (!audioConnecttohost((stationlist[actStation].url))) {
       //if start fails we switch back to station 0
       actStation = 0;
-      startUrl(String(stationlist[actStation].url));
+      // startUrl(String(stationlist[actStation].url));
+      audioConnecttohost((stationlist[actStation].url));
     }
   //switch back to clock screen
   clockmode = true; //changeStation: Switch bach to clock mode.
