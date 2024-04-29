@@ -113,15 +113,14 @@ void setGainValue(uint16_t value) {
   if (v > 100) v = 100;
   if (v < 0) v = 0;
   curGain = v;
-  //Max audioSetVolume is 21. curGain is 0-100%. Compute percentage value of 21.
-  float vs = 21.0 / 100 * curGain;
-  Serial.printf("Float vs  =%f\n",vs);
-  volumeSet = int(vs);
   //save gain and adjust slider and set gain to the new value
   pref.putUShort("gain",curGain);
   showSlider(27,curGain,100);
-  // setGain(curGain);
-  Serial.printf("SetGainValue value =%i, curGain =%i audioSetVolume = %i\n",value, curGain, volumeSet);
+  //Max audioSetVolume is 21. curGain is 0-100%. Compute percentage value of 21.
+  float vs = 21.0 / 100 * curGain;
+  // Serial.printf("Float vs  =%f\n",vs);
+  volumeSet = int(vs);
+  // Serial.printf("SetGainValue value =%i, curGain =%i audioSetVolume = %i\n",value, curGain, volumeSet);
   audioSetVolume(volumeSet);
   sprintf(txt,"%i %%",curGain);
   displayMessage(231,8,80,20,txt,ALIGNRIGHT,false,ILI9341_BLACK,ILI9341_LIGHTGREY,1);
@@ -387,9 +386,14 @@ void toggleRadio(boolean off) {
         actStation = 0;
         audioConnecttohost((stationlist[actStation].url));
       }
-      // setGain(curGain);  //Set volume to configured volume.
-      audioSetVolume(curGain);
-    }
+      // Set volume to configured volume.
+      //Max audioSetVolume is 21. curGain is 0-100%. Compute percentage value of 21.
+      float vs = 21.0 / 100 * curGain;
+      // Serial.printf("Float vs  =%f\n",vs);
+      volumeSet = int(vs);
+      // Serial.printf("toggleRadio: curGain =%i audioSetVolume = %i\n", curGain, volumeSet);
+      audioSetVolume(volumeSet);
+      }
   }
 }
 
