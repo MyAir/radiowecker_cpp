@@ -214,10 +214,10 @@ void setup() {
   Serial.begin(115200);
   //Serial.printf("ssid = %s, pkey= %s \n", ssid.c_str(), pkey.c_str());
   Serial.println("Load preferences");
-  Serial.printf("Total heap: %d\n", ESP.getHeapSize());
-  Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
-  Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
-  Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
+  Serial.printf("Total heap: %u\n", ESP.getHeapSize());
+  Serial.printf("Free heap: %u\n", ESP.getFreeHeap());
+  Serial.printf("Total PSRAM: %u\n", ESP.getPsramSize());
+  Serial.printf("Free PSRAM: %u\n", ESP.getFreePsram());
 
   // Display reset reason (from Schreibfaul1)
   const char* rr = NULL;
