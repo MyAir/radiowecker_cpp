@@ -99,11 +99,8 @@ void findNextAlarm();  //main.cpp
 void displayAlarmState();  //tft_display.cpp
 void saveList(); //websrvr.cpp
 void reorder(uint8_t oldpos, uint8_t newpos);
-// void stopPlaying();
-// bool startUrl(String url);
 void setStationData();
 void setup_webserver();
-// void setGain(float gain);
 void displayClear();
 void setBGLight(uint8_t prct);
 void showProgress(uint32_t prc);
@@ -180,27 +177,6 @@ uint32_t       audioGetCurrentTime();
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline const char* byte_to_binary(int8_t x) { // e.g. alarmdays
-    static char b[9];
-    b[0] = '\0';
-
-    int32_t z;
-    for(z = 128; z > 0; z >>= 1) { strcat(b, ((x & z) == z) ? "1" : "0"); }
-    return b;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline uint32_t simpleHash(const char* str) {
-    if(str == NULL) return 0;
-    uint32_t hash = 0;
-    for(int32_t i = 0; i < strlen(str); i++) {
-        if(str[i] < 32) continue; // ignore control sign
-        hash += (str[i] - 31) * i * 32;
-    }
-    return hash;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 inline int32_t str2int(const char* str) {
     int32_t len = strlen(str);
     if(len > 0) {
@@ -217,22 +193,6 @@ inline int32_t str2int(const char* str) {
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline void trim(char* s) {
-    // fb   trim in place
-    char* pe;
-    char* p = s;
-    while(isspace(*p)) p++; // left
-    pe = p;                 // right
-    while(*pe != '\0') pe++;
-    do { pe--; } while((pe > p) && isspace(*pe));
-    if(p == s) { *++pe = '\0'; }
-    else { // move
-        while(p <= pe) *s++ = *p++;
-        *s = '\0';
-    }
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 inline bool startsWith(const char* base, const char* searchString) {
     char c;
     while((c = *searchString++) != '\0')
@@ -245,7 +205,7 @@ inline bool endsWith(const char* base, const char* searchString) {
     int32_t slen = strlen(searchString);
     if(slen == 0) return false;
     const char* p = base + strlen(base);
-    //  while(p > base && isspace(*p)) p--;  // rtrim
+     while(p > base && isspace(*p)) p--;  // rtrim
     p -= slen;
     if(p < base) return false;
     return (strncmp(p, searchString, slen) == 0);
@@ -259,96 +219,6 @@ inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIn
     char* pos = strstr(p, needle);
     if(pos == nullptr) return -1;
     return pos - haystack;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t lastIndexOf(const char* haystack, const char needle) {
-    const char* p = strrchr(haystack, needle);
-    return (p ? p - haystack : -1);
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline boolean strCompare(char* str1, char* str2) { // returns true if str1 == str2
-    if(!str1) return false;
-    if(!str2) return false;
-    if(strlen(str1) != strlen(str2)) return false;
-    boolean  f = true;
-    uint16_t i = strlen(str1);
-    while(i) {
-        i--;
-        if(str1[i] != str2[i]) {
-            f = false;
-            break;
-        }
-    }
-    return f;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline boolean strCompare(const char* str1, char* str2) { // returns true if str1 == str2
-    if(!str1) return false;
-    if(!str2) return false;
-    if(strlen(str1) != strlen(str2)) return false;
-    boolean  f = true;
-    uint16_t i = strlen(str1);
-    while(i) {
-        i--;
-        if(str1[i] != str2[i]) {
-            f = false;
-            break;
-        }
-    }
-    return f;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_malloc(uint16_t len) {
-    char* ps_str = NULL;
-    if(psramFound()){ps_str = (char*) ps_malloc(len);}
-    else             {ps_str = (char*)    malloc(len);}
-    return ps_str;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_calloc(uint16_t len, uint8_t size) {
-    char* ps_str = NULL;
-    if(psramFound()){ps_str = (char*) ps_calloc(len, size);}
-    else             {ps_str = (char*)    calloc(len, size);}
-    return ps_str;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline char* x_ps_strdup(const char* str) {
-    char* ps_str = NULL;
-    if(psramFound()) { ps_str = (char*)ps_malloc(strlen(str) + 1); }
-    else { ps_str = (char*)malloc(strlen(str) + 1); }
-    strcpy(ps_str, str);
-    return ps_str;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int16_t strlenUTF8(const char* str) { // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
-    if(str == NULL) return -1;
-    uint16_t idx = 0;
-    uint16_t cnt = 0;
-    while(*(str + idx) != '\0') {
-        if((*(str + idx) < 0xC0) && (*(str + idx) > 0x1F)) cnt++;
-        if((*(str + idx) == 0xE2) && (*(str + idx + 1) == 0x80)) cnt++; // general punctuation
-        idx++;
-    }
-    return cnt;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
-    const int32_t run = in_max - in_min;
-    if(run == 0) {
-        log_e("map(): Invalid input range, min == max");
-        return -1; // AVR returns -1, SAM returns 0
-    }
-    const int32_t rise = out_max - out_min;
-    const int32_t delta = x - in_min;
-    return (delta * rise) / run + out_min;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

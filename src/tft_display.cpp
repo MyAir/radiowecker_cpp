@@ -110,10 +110,8 @@ void setGainValue(uint16_t value) {
   char txt[10];
   //calculate gain from x-Position 0 to 100%
   float v = (value - 15) * 0.345;
-  Serial.printf("Float v =%f\n",v);
   if (v > 100) v = 100;
   if (v < 0) v = 0;
-  Serial.printf("Float v after IF =%f\n",v);
   curGain = v;
   //Max audioSetVolume is 21. curGain is 0-100%. Compute percentage value of 21.
   float vs = 21.0 / 100 * curGain;
@@ -375,7 +373,6 @@ void toggleRadio(boolean off) {
   //Turn radio on or off:
   if (off) {
     //Turn radio off:
-    // stopPlaying(); //Stop the stream
     audioStopSong();
     radio = false;
     // setGain(0);  //Set volume to zero.
@@ -385,11 +382,9 @@ void toggleRadio(boolean off) {
     if (connected) {
       //if on start the stream an set the gain
       radio = true;
-      // if (!startUrl(String(stationlist[actStation].url))) {
       if (!audioConnecttohost((stationlist[actStation].url))) {
         //if no success switch to station 0
         actStation = 0;
-        // startUrl(String(stationlist[actStation].url));
         audioConnecttohost((stationlist[actStation].url));
       }
       // setGain(curGain);  //Set volume to configured volume.
@@ -440,11 +435,9 @@ void changeStation() {
     actStation = curStation;
     //save the new value and start stream
     pref.putUShort("station",curStation);
-    // if (!startUrl(String(stationlist[actStation].url))) {
     if (!audioConnecttohost((stationlist[actStation].url))) {
       //if start fails we switch back to station 0
       actStation = 0;
-      // startUrl(String(stationlist[actStation].url));
       audioConnecttohost((stationlist[actStation].url));
     }
   //switch back to clock screen
