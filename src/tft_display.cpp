@@ -224,7 +224,7 @@ void textInBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text,
         y = y + ht +1;
         l--;
       }
-      Serial.println(token);
+      if(CORE_DEBUG_LEVEL >= 5) Serial.println(token);
       token = strtok(NULL, " ");
       
     }
@@ -522,7 +522,7 @@ void displayClear() {
 
 //show date, time and loudness in the first line
 void displayDateTime() {
-  Serial.println("Show Time");
+  if(CORE_DEBUG_LEVEL >= 5) Serial.println("Show Time");
   updateTime(false);
 }
 
