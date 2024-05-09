@@ -356,7 +356,7 @@ void testStation() {
 //AJAX command /cmd/endtest
 void endTest() {
   //switch back to the current station to end the test
-  connecttohost((stationlist[actStation].url));
+  audioConnecttohost((stationlist[actStation].url));
   //respond with OK
   server.send(200,"text/plain","OK");
 }

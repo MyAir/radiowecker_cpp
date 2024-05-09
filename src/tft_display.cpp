@@ -116,12 +116,7 @@ void setGainValue(uint16_t value) {
   //save gain and adjust slider and set gain to the new value
   pref.putUShort("gain",curGain);
   showSlider(27,curGain,100);
-  //Max audioSetVolume is 21. curGain is 0-100%. Compute percentage value of 21.
-  float vs = 21.0 / 100 * curGain;
-  // Serial.printf("Float vs  =%f\n",vs);
-  volumeSet = int(vs);
-  // Serial.printf("SetGainValue value =%i, curGain =%i audioSetVolume = %i\n",value, curGain, volumeSet);
-  audioSetVolume(volumeSet);
+  setGain(curGain);
   sprintf(txt,"%i %%",curGain);
   displayMessage(231,8,80,20,txt,ALIGNRIGHT,false,ILI9341_BLACK,ILI9341_LIGHTGREY,1);
 }

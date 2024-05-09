@@ -288,7 +288,7 @@ void setup() {
   Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
   //run setup functions in the sub parts
   // setup_audio(); //setup audio streams
-  audioInit();
+  audioInit();  //initialize audio Task.
   setup_display(); //setup display interface
   setup_senderList(); //load station list from preferences
   setGain(0); //mute audio to begin with.
@@ -483,33 +483,33 @@ void connecttohost(const char* host) {
     _icyBitRate = 0;
     _avrBitRate = 0;
 
-    idx1 = indexOf(host, "|", 0);
-    // log_i("idx1 = %i", idx1);
-    if(idx1 == -1) { // no pipe found
-        _f_isWebConnected = audioConnecttohost(host);
-        _f_isFSConnected = false;
-        return;
-    }
-    else { // pipe found
-        idx2 = indexOf(host, "|", idx1 + 1);
-        // log_i("idx2 = %i", idx2);
-        if(idx2 == -1) { // second pipe not found
-            _f_isWebConnected = audioConnecttohost(host);
-            _f_isFSConnected = false;
-            return;
-        }
-        else {                         // extract url, user, pwd
-            url = strndup(host, idx1); // extract url
-            user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
-            pwd = strdup(host + idx2 + 1);
-            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd) _f_isWebConnected = audioConnecttohost(url, user, pwd);
-            _f_isFSConnected = false;
-            if(url) free(url);
-            if(user) free(user);
-            if(pwd) free(pwd);
-        }
-    }
-}
+//     idx1 = indexOf(host, "|", 0);
+//     // log_i("idx1 = %i", idx1);
+//     if(idx1 == -1) { // no pipe found
+//         _f_isWebConnected = audioConnecttohost(host);
+//         _f_isFSConnected = false;
+//         return;
+//     }
+//     else { // pipe found
+//         idx2 = indexOf(host, "|", idx1 + 1);
+//         // log_i("idx2 = %i", idx2);
+//         if(idx2 == -1) { // second pipe not found
+//             _f_isWebConnected = audioConnecttohost(host);
+//             _f_isFSConnected = false;
+//             return;
+//         }
+//         else {                         // extract url, user, pwd
+//             url = strndup(host, idx1); // extract url
+//             user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
+//             pwd = strdup(host + idx2 + 1);
+//             SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd) _f_isWebConnected = audioConnecttohost(url, user, pwd);
+//             _f_isFSConnected = false;
+//             if(url) free(url);
+//             if(user) free(user);
+//             if(pwd) free(pwd);
+//         }
+//     }
+// }
 
 /*****************************************************************************************************************************************************
  *                                                                    E V E N T S                                                                    *
@@ -539,28 +539,24 @@ void audio_info(const char* info) {
     }
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
     {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
-        // SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);
+        SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);
         return;
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_showstation(const char* info) {
+    //TODO: Check if Station name can be displayed when radio is playing
     _stationName_air = info;
     if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     if(!_cur_station) _f_newLogoAndStation = true;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_showstreamtitle(const char* info) {
-    strcpy(_streamTitle, info);
-    if(!_f_irNumberSeen) _f_newStreamTitle = true;
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 
-    strncpy(title, info, sizeof(title));
-    title[sizeof(title)-1] = 0;
-    //show the message on the display
-    if(!_f_irNumberSeen) newTitle = true;
-    
+    strncpy(title, info, sizeof(title));  // Store new title 
+    title[sizeof(title)-1] = 0;  // Set null terminator
+    newTitle = true;  // Set Flag that new title is updated.
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void show_ST_commercial(const char* info) {

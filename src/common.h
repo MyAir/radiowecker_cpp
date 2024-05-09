@@ -110,7 +110,7 @@ void showRadio();
 
 //Schreibfaul Commons:
 
-void connecttohost(const char* host);
+// void connecttohost(const char* host);
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // output on serial terminal
