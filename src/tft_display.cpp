@@ -386,13 +386,6 @@ void toggleRadio(boolean off) {
         actStation = 0;
         audioConnecttohost((stationlist[actStation].url));
       }
-      // Set volume to configured volume.
-      //Max audioSetVolume is 21. curGain is 0-100%. Compute percentage value of 21.
-      float vs = 21.0 / 100 * curGain;
-      // Serial.printf("Float vs  =%f\n",vs);
-      volumeSet = int(vs);
-      // Serial.printf("toggleRadio: curGain =%i audioSetVolume = %i\n", curGain, volumeSet);
-      audioSetVolume(volumeSet);
       }
   }
 }

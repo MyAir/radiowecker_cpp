@@ -206,6 +206,16 @@ void findNextAlarm() {
   }
 }
 
+void setGain(uint8_t gain) {
+      //Max audioSetVolume is 21. gain is 0-100%. Compute percentage value of 21.
+      float vs = 21.0 / 100 * gain;
+      // Serial.printf("Float vs  =%f\n",vs);
+      volumeSet = int(vs);
+      Serial.printf("setGain: gain =%i volumeSet = %i\n", gain, volumeSet);
+      audioSetVolume(volumeSet);
+
+}
+
 //setup
 void setup() {
   #ifdef BUILD_TYPE_DEV //Build type for development
@@ -281,7 +291,7 @@ void setup() {
   audioInit();
   setup_display(); //setup display interface
   setup_senderList(); //load station list from preferences
-  audioSetVolume(0); //set the current gain
+  setGain(0); //mute audio to begin with.
   //Try to connect WLAN show progress on display 
   displayClear();
   displayMessage(5, 10, 310, 30, "Connect WLAN", ALIGNCENTER, true, ILI9341_YELLOW, ILI9341_BLACK,1);
