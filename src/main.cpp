@@ -477,6 +477,7 @@ void loop() {
     if (snoozeWait > 0) { //Radio should be turned off soon:
       snoozeWait--; //Decrease snoonzeWait by 1 minute.
       if (snoozeWait == 0) { //Radio should be turned off now:
+        //TODO: Make fadeOut optional
         toggleRadio(true, true); //snoozeWait timeout: Turn radio off.
         if (alarmTripped) { //Radio was turned off due to alarm timeout:
           // Clear alarm flags.
@@ -495,6 +496,7 @@ void loop() {
       alarmRestartWait--; //Decrease restart timer by 1 minute.
       if (alarmRestartWait == 0) { //Alarm shoud be restarted now:
         snoozeWait = alarmDuration; //alarmRestartWait: Set snooze time for auto-turnOff.
+        //TODO: Make fadeIn optional
         toggleRadio(false, true); // alarmRestartWait: Turn radio back on.
         showClock();  //Display clock, radio and alarm state.
       } else { //Alarm shoud be restarted but not yet:
@@ -512,6 +514,7 @@ void loop() {
         // Set snooze Timer so alarm does not sound longer than defined alarm duration.
         snoozeWait = alarmDuration;
         // Turn on radio.
+        //TODO: Make fadeIn optional
         toggleRadio(false, true); // Alarm tripped. Turn radio on.
         showClock();
       }
