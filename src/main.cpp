@@ -49,9 +49,16 @@ String ssid = MY_SSID;            //ssid for WLAN connection
 String pkey = MY_PKEY;            //passkey for WLAN connection
 String ntp = "de.pool.ntp.org";   //NTP server url
 uint8_t curStation = 0;           //index for current selected station in stationlist
-uint8_t curGain = 200;            //current loudness
+uint8_t curGain = 100;            //current loudness
+float_t fadeGain = 0.0;           //current volume while fading
+float_t fadeStep = 1.6;           //Steps by how much the volume is in-/de-creased every second.
 uint8_t volumeSet = 21;           //Volume to be set
+boolean fadeIn = false;           //Flag to fade in the music
+boolean fadeOut = false;          //Flag to fade out the music
 uint8_t snoozeTime = 30;          //snooze time in minutes
+uint16_t fadeInTime = 30;         //Fade-in time in seconds to reach max volume
+uint16_t fadeOutTime = 30;        //Fade-out time in seconds to reach max volume
+uint16_t fadeTimer = 0;           //Countdown timer for fade-in/out
 uint16_t alarmDuration = 30;      //duration of alarm in minutes without interaction until it's autmatically turned off.
 boolean alarmsActive = false;     //flag if all alarms are active or not
 boolean alarm1Active  = false;    //flag if first alarm is active or not
@@ -69,7 +76,8 @@ uint16_t alarmtime = 0;           //next relevant alarm time
 uint8_t alarmday = 8;             //weekday for next relevant alarm or 8 means alarm disabled
 char title[64];                   //character array to hold meta data message
 bool newTitle = false;            //flag to signal a new title
-uint32_t tick = 0;                //last tick-counter value to trigger timed event
+uint32_t tick = 0;                //last tick-counter value to trigger timed event every 60 seconds
+uint32_t secTick = 0;             //last tick-counter value to trigger timed event every second
 uint32_t discon = 0;              //tick-counter value to calculate disconnected time
 uint16_t minutes;                 //current number of minutes since midnight
 uint8_t weekday;                  //current weekday
@@ -328,8 +336,12 @@ void setup() {
   setup_ota();
   //remember the tick count for the timed event
   tick = millis();
+  secTick = tick;
   //subtract no of current seconds from tick count to get first time update on the minute.
-  if (connected) tick = tick - (ti.tm_sec * 1000);
+  if (connected) {
+    tick = tick - (ti.tm_sec * 1000);
+    secTick = tick;
+  }
   start_conf = 0;
 }
 
@@ -405,7 +417,49 @@ void loop() {
       lastldr = tmp;
     }
   } 
-  //timed event updatetime display every minute  
+
+  //timed events every second.
+  if ((millis() - secTick) > 1000) {
+    secTick = millis();
+    if (fadeTimer > 0){
+      int8_t gain = 0;
+      fadeTimer --;
+      if (fadeIn) {
+        Serial.printf("fadeIn:  fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
+        fadeGain += fadeStep;
+        float zwGain = fadeGain + 0.5 - (fadeGain<0);
+        gain = int(zwGain);
+        if (gain > curGain) gain = curGain;
+        Serial.printf("fadeIn:  setGain=%i, fadeGain=%f\n", gain, fadeGain);
+        setGain(gain);
+      }
+      if (fadeOut) {
+        Serial.printf("fadeOut: fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
+        fadeGain -= fadeStep;
+        float zwGain = fadeGain + 0.5 - (fadeGain<0);
+        gain = int(zwGain);
+        if (gain < 0 || fadeTimer <= 0) {
+          gain = 0;
+        }  
+        Serial.printf("fadeOut: setGain=%i, fadeGain=%f\n", gain, fadeGain);
+        setGain(gain);
+        if (gain <= 0) {
+          //Turn radio off:
+          Serial.printf("fadeOut: audioStopSong, radio = false\n");
+          audioStopSong();
+          radio = false;
+          showClock();
+        }
+      }
+      if (fadeTimer <= 0) {
+        Serial.printf("fadeTimer: turning off fadeIn/fadeOut flags\n");
+        fadeIn = false;
+        fadeOut = false;
+      }
+    }
+  } 
+
+  //timed events every minute. Update time, Handle alarms and Snooze.
   if ((millis() - tick) > 60000) {
     tick = millis();
     //get date and time information
@@ -423,7 +477,7 @@ void loop() {
     if (snoozeWait > 0) { //Radio should be turned off soon:
       snoozeWait--; //Decrease snoonzeWait by 1 minute.
       if (snoozeWait == 0) { //Radio should be turned off now:
-        toggleRadio(true); //snoozeWait timeout: Turn radio off.
+        toggleRadio(true, true); //snoozeWait timeout: Turn radio off.
         if (alarmTripped) { //Radio was turned off due to alarm timeout:
           // Clear alarm flags.
           alarmTripped = false; // snoozeWait alarm-timeout: Clear alarmTripped in case alarm timeout has been reached.
@@ -441,7 +495,7 @@ void loop() {
       alarmRestartWait--; //Decrease restart timer by 1 minute.
       if (alarmRestartWait == 0) { //Alarm shoud be restarted now:
         snoozeWait = alarmDuration; //alarmRestartWait: Set snooze time for auto-turnOff.
-        toggleRadio(false); // alarmRestartWait: Turn radio back on.
+        toggleRadio(false, true); // alarmRestartWait: Turn radio back on.
         showClock();  //Display clock, radio and alarm state.
       } else { //Alarm shoud be restarted but not yet:
         displayAlarmState(); //alarmStateWait: Display when alarm is reactivated.
@@ -458,7 +512,7 @@ void loop() {
         // Set snooze Timer so alarm does not sound longer than defined alarm duration.
         snoozeWait = alarmDuration;
         // Turn on radio.
-        toggleRadio(false); // Alarm tripped. Turn radio on.
+        toggleRadio(false, true); // Alarm tripped. Turn radio on.
         showClock();
       }
     }
@@ -471,17 +525,17 @@ void loop() {
 /*****************************************************************************************************************************************************
  *                                                                     A U D I O                                                                     *
  *****************************************************************************************************************************************************/
-void connecttohost(const char* host) {
-    int32_t idx1, idx2;
-    char*   url = nullptr;
-    char*   user = nullptr;
-    char*   pwd = nullptr;
+// void connecttohost(const char* host) {
+//     int32_t idx1, idx2;
+//     char*   url = nullptr;
+//     char*   user = nullptr;
+//     char*   pwd = nullptr;
 
-    // clearBitRate();
-    _cur_Codec = 0;
-    //    if(_state == RADIO) clearStreamTitle();
-    _icyBitRate = 0;
-    _avrBitRate = 0;
+//     // clearBitRate();
+//     _cur_Codec = 0;
+//     //    if(_state == RADIO) clearStreamTitle();
+//     _icyBitRate = 0;
+//     _avrBitRate = 0;
 
 //     idx1 = indexOf(host, "|", 0);
 //     // log_i("idx1 = %i", idx1);

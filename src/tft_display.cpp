@@ -345,6 +345,7 @@ void TFTtoggleRadio(boolean off) {
     // An alarm was tripped so we turn the radio off and display the next alarm:
     if (radio) { //Turn off radio if it is running.
       toggleRadio(true); //TFTtoggleRadio: Turn radio off
+      fadeOut = false;  //Turn off fade out flag in case we're turning radio off during fadeOut
     } 
     // Clear alrm flags and snooze/restart timers.
     alarmTripped = false; //TFTtoggleRadio: Clear alarmTripped in case alarm timeout has been reached.
@@ -354,6 +355,8 @@ void TFTtoggleRadio(boolean off) {
   } else { //Radio is toggeled in non-alarm mode:
     //No Alarm was tripped:
     toggleRadio(off);   //Toggle radio on/off
+    fadeIn = false;     //Turn off fade in flag in case we're toggeling the radio during fadeIn
+    fadeOut = false;    //Turn off fade out flag in case we're turning radio off during fadeOut
     if (!radio){ //Radio is now turned off.
       snoozeWait = 0; //TFTtoggleRadio non-alarm: Clear sleepIn-snooze time.
     }
@@ -363,25 +366,43 @@ void TFTtoggleRadio(boolean off) {
 }
 
 //Radio is toggled from some function:
-void toggleRadio(boolean off) {
+void toggleRadio(boolean off, boolean fade) {
   //Turn radio on or off:
   if (off) {
     //Turn radio off:
-    audioStopSong();
-    radio = false;
-    // setGain(0);  //Set volume to zero.
-    audioSetVolume(0);
+    if (fade){
+      //Set up values to fade out music and turn radio off in 1second tick loop
+      fadeTimer = fadeOutTime;
+      fadeGain = curGain;
+      fadeOut = true;
+    } else {
+      //Turn radio off directly.
+      audioStopSong();
+      radio = false;
+      setGain(0);  //Set volume to zero.
+    }
   } else {
     // Turn radio on:
+    radio = true;  //Set flag to display radio panel on screen.
+    if (fade) {
+      //Set volume to zero and set up values to fade in audio.
+      setGain(0);
+      fadeTimer = fadeInTime;
+      fadeIn = true;
+      fadeGain = 0;
+    } else {
+      // Turn radio on directly:
+      setGain(curGain);  //Set volume to max desired volume.
+    }
+    // Connect to radio station.
     if (connected) {
       //if on start the stream an set the gain
-      radio = true;
       if (!audioConnecttohost((stationlist[actStation].url))) {
         //if no success switch to station 0
         actStation = 0;
         audioConnecttohost((stationlist[actStation].url));
       }
-      }
+    }
   }
 }
 
@@ -409,6 +430,8 @@ void startSnooze() {
   if (alarmTripped){
     // an alarm was tripped:
     toggleRadio(true);  // startSnooze: Turn radio off.
+    fadeIn = false; //Clear fade flags
+    fadeOut = false;
     alarmRestartWait = snoozeTime;  // startSnooze: Set alarmRestartWait timer.
     snoozeWait = 0;  // startSnooze: clear sleepIn snooze timer.
   } else {

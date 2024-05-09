@@ -61,8 +61,15 @@ extern String pkey;                 //passkey for WLAN connection
 extern String ntp;                  //NTP server url
 extern uint8_t curStation ;         //index for current selected station in stationlist
 extern uint8_t curGain ;            //current loudness
+extern float_t fadeGain ;           //current volume while fading
+extern float_t fadeStep ;           //Steps by how much the volume is in-/de-creased every second.
+extern boolean fadeIn ;             //Flag to fade in the music
+extern boolean fadeOut ;            //Flag to fade out the music
+extern uint16_t fadeTimer ;         //Countdown timer for fade-in/out
 extern uint8_t volumeSet ;          //Volume to be set
 extern uint8_t snoozeTime ;         //snooze time in minutes
+extern uint16_t fadeInTime ;        //Ramp-Up time in seconds to reach max volume
+extern uint16_t fadeOutTime ;       //Ramp-Down time in seconds to reach max volume
 extern uint16_t alarmDuration ;     //duration of alarm in minutes without interaction until it's autmatically turned off.
 extern boolean alarmsActive ;       //flag if alarms are turend on or off
 extern boolean alarm1Active ;       //flag if first alarm is active or not
@@ -80,7 +87,8 @@ extern uint16_t alarmtime ;         //next relevant alarm time
 extern uint8_t alarmday ;           //weekday for next relevant alarm or 8 means alarm disabled
 extern char title[64];              //character array to hold meta data message
 extern bool newTitle ;              //flag to signal a new title
-extern uint32_t tick ;              //last tick-counter value to trigger timed event
+extern uint32_t tick ;              //last tick-counter value to trigger timed event every 60 seconds
+extern uint32_t secTick ;           //last tick-counter value to trigger timed event every second
 extern uint32_t discon;             //tick-counter value to calculate disconnected time
 extern uint16_t minutes;            //current number of minutes since midnight
 extern uint8_t weekday;             //current weekday
@@ -105,12 +113,11 @@ void setup_webserver();
 void displayClear();
 void setBGLight(uint8_t prct);
 void showProgress(uint32_t prc);
-void toggleRadio(boolean off);
+void toggleRadio(boolean off, boolean ramp = false);
 void showRadio();
 
 //Schreibfaul Commons:
 
-// void connecttohost(const char* host);
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // output on serial terminal
