@@ -187,16 +187,16 @@ void textInBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text,
   encodeUnicode(text, tmp);
   tft.getTextBounds("n",0,100,&xt,&yt,&wt,&ht);
   sp =wt;
-  Serial.printf("Space = %i\n",sp);
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Space = %i\n",sp);
   tft.getTextBounds(tmp,0,100,&xt,&yt,&wt,&ht);
-  Serial.printf("Text %s Länge %i\n",text,wt);
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Text %s Länge %i\n",text,wt);
   h0 = 100 - yt;
   x0 = x;
   y = y + h0 +1;
   if (wt<w) { //enough space in one line
     if (align == ALIGNCENTER) x0 += (w-wt)/2;
     if (align == ALIGNRIGHT) x0 += (w-wt);
-    Serial.printf("x= %i, y= %i, ht= %i, text = %s\n",x0,y,ht,tmp);
+    if(CORE_DEBUG_LEVEL >= 5) Serial.printf("x= %i, y= %i, ht= %i, text = %s\n",x0,y,ht,tmp);
     tft.setCursor(x0, y);
     tft.print(tmp);
   } else { //if there is not enough space in one line we adjust the text by word wrap
@@ -208,7 +208,7 @@ void textInBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text,
     len = 0;
     while ((token != NULL) && (l>0)) {
       tft.getTextBounds(token,0,100,&xt,&yt,&wt,&ht); 
-      Serial.printf("Token %s Länge %i gesamt %s Länge %i Line %i\n",token,wt,msg,len,l);
+      if(CORE_DEBUG_LEVEL >= 5) Serial.printf("Token %s Länge %i gesamt %s Länge %i Line %i\n",token,wt,msg,len,l);
       if ((len + wt + sp) < w) {
         if (len > 0) { strcat(msg," "); len +=sp; }
         len = len + wt;
@@ -263,12 +263,12 @@ void updateTime(boolean redraw) {
     }
     uint8_t z;
     strftime(tim, sizeof(tim), "%H:%M", &ti);
-    Serial.printf("Zeit = %s\n",tim);
+    if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Zeit = %s\n",tim);
     //we iterate over the time string
     //if redraw is true or a number has changed this single number will be redrawn
     for (uint8_t i = 0; i<5; i++) {
       z = (i==2)?10:tim[i]-'0';
-      Serial.printf("Ziffer %i %c = %c\n",z,tim[i],lasttime[i]);
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Ziffer %i %c = %c\n",z,tim[i],lasttime[i]);
       if ((z<11) && (redraw || (tim[i] != lasttime[i]))) {
         tft.drawRGBBitmap(30+i*55,30,ziffern_rot[z],50,70);
       }
@@ -408,7 +408,7 @@ void toggleRadio(boolean off, boolean fade) {
 
 //turn the alarm on or off
 void toggleAlarm() {
-  Serial.println("Toggeling alarm...");
+  if(CORE_DEBUG_LEVEL >= 4) Serial.println("Toggeling alarm...");
   if (alarmsActive){
     alarmsActive = false;
   } else {
@@ -416,12 +416,12 @@ void toggleAlarm() {
     //Scan for next alarm
     findNextAlarm();
   }
-  Serial.printf("Storing alarmsActive = %s\n", alarmsActive ? "true" : "false");
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Storing alarmsActive = %s\n", alarmsActive ? "true" : "false");
   pref.putBool("alarmsActive",alarmsActive);
   
   // Redraw buttons 
   drawButtons();
-  Serial.println("...Toggeling alarm complete.");
+  if(CORE_DEBUG_LEVEL >= 4) Serial.println("...Toggeling alarm complete.");
   }
 
 void startSnooze() {
@@ -469,7 +469,7 @@ void touch_loop() {
 //we get position and type of the event
 void onTouchClick(TS_Point p) {
   if (!clockmode) start_conf = millis(); //if we are in config mode reset start_conf on any event
-  Serial.printf("Touch on %i, %i\n",p.x,p.y);
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Touch on %i, %i\n",p.x,p.y);
   if (clockmode) { //if we are in the clock mode, we switch into the config mode. Independent where the event occured.
     clockmode = false;
     showCommand(); 

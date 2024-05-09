@@ -138,14 +138,14 @@ void setRTC(const char* TZString) {
 //set alarmtime to the time on the day and alarmday on weekday for alarm
 //or 8 if no alarm exists
 void findNextAlarm() {
-  Serial.println("Search next alarm time");
+  if(CORE_DEBUG_LEVEL >= 3) Serial.println("Search next alarm time");
   int wd; 
   uint8_t mask;
   if (getLocalTime(&ti)) { //get current date and time
     wd = weekday; //variable to iterate over weekdays starting with today
     alarmday = 8;  //alarmday = 8 means no alarm
     mask = 1 << wd;  //mask to filter weekday to be tested
-    // Serial.printf("alarmday = %i, wd = %i, minutes = %i,  alarm1 = %i, alarm2 = %i, AlarmsActive = %s, alarm1Active = %s, alarm2Active = %s\n",alarmday, wd, minutes, alarm1,alarm2, alarmsActive ? "true" : "false", alarm1Active ? "true" : "false", alarm2Active ? "true" : "false");
+    if(CORE_DEBUG_LEVEL >= 4) Serial.printf("alarmday = %i, wd = %i, minutes = %i,  alarm1 = %i, alarm2 = %i, AlarmsActive = %s, alarm1Active = %s, alarm2Active = %s\n",alarmday, wd, minutes, alarm1,alarm2, alarmsActive ? "true" : "false", alarm1Active ? "true" : "false", alarm2Active ? "true" : "false");
 
     //Search current weekday for future alarm:
     //Test if alarm1 is active.
@@ -217,9 +217,9 @@ void findNextAlarm() {
 void setGain(uint8_t gain) {
       //Max audioSetVolume is 21. gain is 0-100%. Compute percentage value of 21.
       float vs = 21.0 / 100 * gain;
-      // Serial.printf("Float vs  =%f\n",vs);
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Float vs  =%f\n",vs);
       volumeSet = int(vs);
-      Serial.printf("setGain: gain =%i volumeSet = %i\n", gain, volumeSet);
+      if(CORE_DEBUG_LEVEL >= 3) Serial.printf("setGain: gain =%i volumeSet = %i\n", gain, volumeSet);
       audioSetVolume(volumeSet);
 
 }
@@ -230,7 +230,7 @@ void setup() {
   sleep(5);
   #endif
   Serial.begin(115200);
-  //Serial.printf("ssid = %s, pkey= %s \n", ssid.c_str(), pkey.c_str());
+  if(CORE_DEBUG_LEVEL >= 5) Serial.printf("ssid = %s, pkey= %s \n", ssid.c_str(), pkey.c_str());
   Serial.println("Load preferences");
   Serial.printf("Total heap: %u\n", ESP.getHeapSize());
   Serial.printf("Free heap: %u\n", ESP.getFreeHeap());
@@ -425,34 +425,34 @@ void loop() {
       int8_t gain = 0;
       fadeTimer --;
       if (fadeIn) {
-        Serial.printf("fadeIn:  fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
+        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeIn:  fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
         fadeGain += fadeStep;
         float zwGain = fadeGain + 0.5 - (fadeGain<0);
         gain = int(zwGain);
         if (gain > curGain) gain = curGain;
-        Serial.printf("fadeIn:  setGain=%i, fadeGain=%f\n", gain, fadeGain);
+        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeIn:  setGain=%i, fadeGain=%f\n", gain, fadeGain);
         setGain(gain);
       }
       if (fadeOut) {
-        Serial.printf("fadeOut: fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
+        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
         fadeGain -= fadeStep;
         float zwGain = fadeGain + 0.5 - (fadeGain<0);
         gain = int(zwGain);
         if (gain < 0 || fadeTimer <= 0) {
           gain = 0;
         }  
-        Serial.printf("fadeOut: setGain=%i, fadeGain=%f\n", gain, fadeGain);
+        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: setGain=%i, fadeGain=%f\n", gain, fadeGain);
         setGain(gain);
         if (gain <= 0) {
           //Turn radio off:
-          Serial.printf("fadeOut: audioStopSong, radio = false\n");
+          if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: audioStopSong, radio = false\n");
           audioStopSong();
           radio = false;
           showClock();
         }
       }
       if (fadeTimer <= 0) {
-        Serial.printf("fadeTimer: turning off fadeIn/fadeOut flags\n");
+        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeTimer: turning off fadeIn/fadeOut flags\n");
         fadeIn = false;
         fadeOut = false;
       }
