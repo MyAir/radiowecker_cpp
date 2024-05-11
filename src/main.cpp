@@ -51,12 +51,13 @@ String ntp = "de.pool.ntp.org";   //NTP server url
 uint8_t curStation = 0;           //index for current selected station in stationlist
 uint8_t curGain = 100;            //current loudness
 float_t fadeGain = 0.0;           //current volume while fading
-float_t fadeStep = 1.6;           //Steps by how much the volume is in-/de-creased every second.
 uint8_t volumeSet = 21;           //Volume to be set
 boolean fadeIn = false;           //Flag to fade in the music
 boolean fadeOut = false;          //Flag to fade out the music
 uint8_t snoozeTime = 30;          //snooze time in minutes
+float_t fadeInStep = 1.6;         //Steps by how much the volume is in-/de-creased every second.
 uint16_t fadeInTime = 30;         //Fade-in time in seconds to reach max volume
+float_t fadeOutStep = 1.6;        //Steps by how much the volume is in-/de-creased every second.
 uint16_t fadeOutTime = 30;        //Fade-out time in seconds to reach max volume
 uint16_t fadeTimer = 0;           //Countdown timer for fade-in/out
 uint16_t alarmDuration = 30;      //duration of alarm in minutes without interaction until it's autmatically turned off.
@@ -91,6 +92,7 @@ boolean alarmTripped = false;     //flag to signal that an alarm has started rad
 uint8_t alarmRestartWait = 0;     //remaining minutes until radio is restarted due to alarm-snooze
 
 //Schreibfaul Global Variables:
+//TODO: Clean up unused global vars.
 uint8_t             _cur_Codec = 0;
 uint16_t            _icyBitRate = 0;      // from http response header via event
 uint16_t            _avrBitRate = 0;      // from decoder via getBitRate(true)
@@ -269,6 +271,7 @@ void setup() {
   if (pref.isKey("ntp")) ntp = pref.getString("ntp");
   curGain = 50; //default value
   if (pref.isKey("gain")) curGain = pref.getUShort("gain");
+  //TODO Restore "fadeInStep","fadeInTime", "fadeOutStep","fadeOutTime"
   snoozeTime = 30; //default value
   if (pref.isKey("snooze")) snoozeTime = pref.getUShort("snooze");
   alarmDuration = 30; //default value
@@ -426,7 +429,7 @@ void loop() {
       fadeTimer --;
       if (fadeIn) {
         if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeIn:  fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
-        fadeGain += fadeStep;
+        fadeGain += fadeInStep;
         float zwGain = fadeGain + 0.5 - (fadeGain<0);
         gain = int(zwGain);
         if (gain > curGain) gain = curGain;
@@ -435,7 +438,7 @@ void loop() {
       }
       if (fadeOut) {
         if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
-        fadeGain -= fadeStep;
+        fadeGain -= fadeOutStep;
         float zwGain = fadeGain + 0.5 - (fadeGain<0);
         gain = int(zwGain);
         if (gain < 0 || fadeTimer <= 0) {

@@ -85,10 +85,13 @@ void setAccessData() {
     pkey = server.arg("pkey");
     pref.putString("pkey",pkey);
   }
+  //TODO: Extend to have NTP-Pool 1-3
   if (server.hasArg("ntp")) {
     ntp = server.arg("ntp");
     pref.putString("ntp",ntp);
   }
+  //TODO Implement getter/setter for "fadeInTime" and "fadeOutStep" and calculate "fadeInStep", "fadeOutTime"
+  
   //respond with OK
   server.send(200,"text/plain","OK");
 }
