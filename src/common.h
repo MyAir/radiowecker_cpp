@@ -62,8 +62,9 @@ extern String ntp;                  //NTP server url
 extern uint8_t curStation ;         //index for current selected station in stationlist
 extern uint8_t curGain ;            //current loudness
 extern float_t fadeGain ;           //current volume while fading
-extern float_t fadeStep ;           //Steps by how much the volume is in-/de-creased every second.
+extern float_t fadeInStep ;         //Steps by how much the volume is in-/de-creased every second.
 extern boolean fadeIn ;             //Flag to fade in the music
+extern float_t fadeOutStep ;        //Steps by how much the volume is in-/de-creased every second.
 extern boolean fadeOut ;            //Flag to fade out the music
 extern uint16_t fadeTimer ;         //Countdown timer for fade-in/out
 extern uint8_t volumeSet ;          //Volume to be set
