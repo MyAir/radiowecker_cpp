@@ -341,6 +341,7 @@ void testStation() {
   bool ret = true;
   if (server.hasArg("url"))  {
     ret = audioConnecttohost(server.arg("url").c_str());
+    setGain(curGain);
   }
   if (ret) {
     //if success respond is OK
@@ -357,6 +358,7 @@ void testStation() {
 void endTest() {
   //switch back to the current station to end the test
   audioConnecttohost((stationlist[actStation].url));
+  audioStopSong();
   //respond with OK
   server.send(200,"text/plain","OK");
 }
