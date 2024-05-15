@@ -271,7 +271,11 @@ void setup() {
   if (pref.isKey("ntp")) ntp = pref.getString("ntp");
   curGain = 50; //default value
   if (pref.isKey("gain")) curGain = pref.getUShort("gain");
-  //TODO Restore "fadeInStep","fadeInTime", "fadeOutStep","fadeOutTime"
+  if (pref.isKey("fadeInTime")) fadeInTime = pref.getUShort("fadeInTime");
+  if (pref.isKey("fadeOutTime")) fadeInTime = pref.getUShort("fadeOutTime");
+  fadeInStep = curGain / fadeInTime;  //Calculate fadeInStep
+  fadeOutStep = curGain / fadeOutTime;  //Calculate fadeOutStep
+  Serial.printf("curGain = %i, fadeInStep = %f, fadeOutStep = %f \n", curGain, fadeInStep, fadeOutStep);
   snoozeTime = 30; //default value
   if (pref.isKey("snooze")) snoozeTime = pref.getUShort("snooze");
   alarmDuration = 30; //default value

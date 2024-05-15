@@ -117,6 +117,9 @@ void setGainValue(uint16_t value) {
   pref.putUShort("gain",curGain);
   showSlider(27,curGain,100);
   setGain(curGain);
+  fadeInStep = float(curGain) / float(fadeInTime);  //Recalculate fadeInStep
+  fadeOutStep = float(curGain) / float(fadeOutTime);  //Recalculate fadeOUtStep
+  if(CORE_DEBUG_LEVEL >= 5) Serial.printf("curGain = %i, fadeInStep = %f, fadeOutStep = %f \n", curGain, fadeInStep, fadeOutStep);
   sprintf(txt,"%i %%",curGain);
   displayMessage(231,8,80,20,txt,ALIGNRIGHT,false,ILI9341_BLACK,ILI9341_LIGHTGREY,1);
 }
