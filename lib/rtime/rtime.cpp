@@ -259,8 +259,9 @@ boolean RTIME::begin(String TimeZone){
     // -D NTP_Pool_2='"pool.ntp.org"'
     // -D NTP_Pool_3='"time-a-g.nist.gov"'
     esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    //TODO: Take NTP Pools from prefs
-    configTzTime(RTIME_TZ.c_str(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
+    // configTzTime(RTIME_TZ.c_str(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
+    Serial.printf("RTIME::begin, configTzTime: ntp1 %s, ntp2 %s, ntp3 %s\n", ntp1.c_str(), ntp2.c_str(), ntp3.c_str());
+    configTzTime(RTIME_TZ.c_str(), ntp1.c_str(), ntp2.c_str(), ntp3.c_str());
     return obtain_time();
 }
 

@@ -31,7 +31,7 @@ const char MAIN_page[] PROGMEM = R"=====(
     <script>
         $(function () {
             $(document).ready(getAll);
-            $("#btn_save").click(saveSSID);
+            $("#btn_save").click(setPreferences);
             $("#btn_reset").click(restartHost);
             $("#btn_test").click(testStation);
             $("#btn_updt").click(updateStation);
@@ -42,7 +42,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         });
 
         function getAll() {
-            getSSID();
+            getPreferences();
             getStationList();
             getAlarms();
         }
@@ -133,16 +133,18 @@ const char MAIN_page[] PROGMEM = R"=====(
             });
         }
 
-        function getSSID() {
+        function getPreferences() {
             $.ajax({
                 type: "GET",
-                url: "/cmd/getaccess",
+                url: "/cmd/getprefs",
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
                     $("#ssid_input").val(parts[0]);
                     $("#pkey_input").val(parts[1]);
-                    $("#ntp_input").val(parts[2]);
+                    $("#ntp1_input").val(parts[2]);
+                    $("#ntp2_input").val(parts[3]);
+                    $("#ntp3_input").val(parts[4]);
                 }
             });
         }
@@ -189,11 +191,11 @@ const char MAIN_page[] PROGMEM = R"=====(
             });
         }
 
-        function saveSSID() {
+        function setPreferences() {
             $.ajax({
                 type: "GET",
-                url: "/cmd/setaccess",
-                data: { "ssid": $("#ssid_input").val(), "pkey": $("#pkey_input").val(), "ntp": $("#ntp_input").val() },
+                url: "/cmd/setprefs",
+                data: { "ssid": $("#ssid_input").val(), "pkey": $("#pkey_input").val(), "ntp1": $("#ntp1_input").val() , "ntp2": $("#ntp2_input").val() , "ntp3": $("#ntp3_input").val() },
                 success: function (data) {
                     alert(data);
                 }
@@ -282,7 +284,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         .confpane {
             margin-top: 10px;
             width: 280px;
-            height: 135px;
+            height: auto;
         }
 
         .txtinput {
@@ -422,8 +424,15 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div style="padding-top:10px;"><label for="pkey_input">PKEY:</label>
             <input id="pkey_input" class="txtinput" type="password" />
         </div>
-        <div style="padding-top:10px;"><label for="ntp_input">NTP:</label>
-            <input id="ntp_input" class="txtinput" />
+        <div>&nbsp;</div>
+        <div style="padding-top:10px;"><label for="ntp1_input">NTP1:</label>
+            <input id="ntp1_input" class="txtinput" />
+        </div>
+        <div style="padding-top:10px;"><label for="ntp2_input">NTP2:</label>
+            <input id="ntp2_input" class="txtinput" />
+        </div>
+        <div style="padding-top:10px;"><label for="ntp3_input">NTP3:</label>
+            <input id="ntp3_input" class="txtinput" />
         </div>
         <div style="padding-top:10px;text-align:center">
             <button id="btn_save" type="button">Speichern</button>
@@ -461,7 +470,7 @@ const char MAIN_page[] PROGMEM = R"=====(
     <script>
         $(function () {
             $(document).ready(getAll);
-            $("#btn_save").click(saveSSID);
+            $("#btn_save").click(setPreferences);
             $("#btn_reset").click(restartHost);
             $("#btn_test").click(testStation);
             $("#btn_updt").click(updateStation);
@@ -472,7 +481,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         });
 
         function getAll() {
-            getSSID();
+            getPreferences();
             getStationList();
             getAlarms();
         }
@@ -563,16 +572,18 @@ const char MAIN_page[] PROGMEM = R"=====(
             });
         }
 
-        function getSSID() {
+        function getPreferences() {
             $.ajax({
                 type: "GET",
-                url: "/cmd/getaccess",
+                url: "/cmd/getprefs",
                 data: {},
                 success: function (data) {
                     const parts = data.split("\n");
                     $("#ssid_input").val(parts[0]);
                     $("#pkey_input").val(parts[1]);
-                    $("#ntp_input").val(parts[2]);
+                    $("#ntp1_input").val(parts[2]);
+                    $("#ntp2_input").val(parts[3]);
+                    $("#ntp3_input").val(parts[4]);
                 }
             });
         }
@@ -619,11 +630,11 @@ const char MAIN_page[] PROGMEM = R"=====(
             });
         }
 
-        function saveSSID() {
+        function setPreferences() {
             $.ajax({
                 type: "GET",
-                url: "/cmd/setaccess",
-                data: { "ssid": $("#ssid_input").val(), "pkey": $("#pkey_input").val(), "ntp": $("#ntp_input").val() },
+                url: "/cmd/setprefs",
+                data: { "ssid": $("#ssid_input").val(), "pkey": $("#pkey_input").val(), "ntp1": $("#ntp1_input").val() , "ntp2": $("#ntp2_input").val() , "ntp3": $("#ntp3_input").val() },
                 success: function (data) {
                     alert(data);
                 }
@@ -712,7 +723,7 @@ const char MAIN_page[] PROGMEM = R"=====(
         .confpane {
             margin-top: 10px;
             width: 280px;
-            height: 135px;
+            height: auto;
         }
 
         .txtinput {
@@ -852,8 +863,15 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div style="padding-top:10px;"><label for="pkey_input">PKEY:</label>
             <input id="pkey_input" class="txtinput" type="password" />
         </div>
-        <div style="padding-top:10px;"><label for="ntp_input">NTP:</label>
-            <input id="ntp_input" class="txtinput" />
+        <div>&nbsp;</div>
+        <div style="padding-top:10px;"><label for="ntp1_input">NTP1:</label>
+            <input id="ntp1_input" class="txtinput" />
+        </div>
+        <div style="padding-top:10px;"><label for="ntp2_input">NTP2:</label>
+            <input id="ntp2_input" class="txtinput" />
+        </div>
+        <div style="padding-top:10px;"><label for="ntp3_input">NTP3:</label>
+            <input id="ntp3_input" class="txtinput" />
         </div>
         <div style="padding-top:10px;text-align:center">
             <button id="btn_save" type="button">Speichern</button>

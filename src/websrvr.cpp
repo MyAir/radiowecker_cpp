@@ -73,8 +73,8 @@ void sendStations() {
   
 }
 
-//AJAX command /cmd/setaccess
-void setAccessData() {
+//AJAX command /cmd/setprefs
+void setPreferences() {
   //the command expects three arguments
   //access data will be saved in preferences
   if (server.hasArg("ssid")) {
@@ -85,10 +85,17 @@ void setAccessData() {
     pkey = server.arg("pkey");
     pref.putString("pkey",pkey);
   }
-  //TODO: Extend to have NTP-Pool 1-3
-  if (server.hasArg("ntp")) {
-    ntp = server.arg("ntp");
-    pref.putString("ntp",ntp);
+  if (server.hasArg("ntp1")) {
+    ntp1 = server.arg("ntp1");
+    pref.putString("ntp1",ntp1);
+  }
+  if (server.hasArg("ntp2")) {
+    ntp2 = server.arg("ntp2");
+    pref.putString("ntp2",ntp2);
+  }
+  if (server.hasArg("ntp3")) {
+    ntp3 = server.arg("ntp3");
+    pref.putString("ntp3",ntp3);
   }
   //TODO Implement getter/setter for "fadeInTime" and "fadeOutStep" and calculate "fadeInStep", "fadeOutTime"
   
@@ -96,10 +103,11 @@ void setAccessData() {
   server.send(200,"text/plain","OK");
 }
 
-//AJAX command /cmd/getaccess
-void getAccessData() {
-  //send access data separated by new line
-  String msg = String(ssid) + "\n" + String(pkey) + "\n" + String(ntp);
+//AJAX command /cmd/getprefs
+void getPreferences() {
+  //send preferences separated by new line
+  // String msg = String(ssid) + "\n" + String(pkey) + "\n" + String(ntp);
+  String msg = String(ssid) + "\n" + String(pkey) + "\n" + String(ntp1) + "\n" + String(ntp2) + "\n" + String(ntp3);
   //respond with access data
   server.send(200,"text/plain",msg);
 }
@@ -384,8 +392,8 @@ void setup_webserver() {
   server.on("/cmd/stations",sendStations);
   server.on("/cmd/restorestations",restoreStations);
   server.on("/cmd/restart",restart);
-  server.on("/cmd/setaccess",setAccessData);
-  server.on("/cmd/getaccess",getAccessData);
+  server.on("/cmd/setprefs",setPreferences);
+  server.on("/cmd/getprefs",getPreferences);
   server.on("/cmd/getalarms",getAlarms);
   server.on("/cmd/setalarms",setAlarms);
   server.on("/cmd/getstation",getStationData);

@@ -58,7 +58,9 @@ extern Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
 extern String ssid;                 //ssid for WLAN connection
 extern String pkey;                 //passkey for WLAN connection
-extern String ntp;                  //NTP server url
+extern String ntp1;                 //NTP server Pool 1
+extern String ntp2;                 //NTP server Pool 2
+extern String ntp3;                 //NTP server Pool 3
 extern uint8_t curStation ;         //index for current selected station in stationlist
 extern uint8_t curGain ;            //current loudness
 extern float_t fadeGain ;           //current volume while fading

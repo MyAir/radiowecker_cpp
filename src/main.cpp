@@ -47,7 +47,10 @@ Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
 String ssid = MY_SSID;            //ssid for WLAN connection
 String pkey = MY_PKEY;            //passkey for WLAN connection
-String ntp = "de.pool.ntp.org";   //NTP server url
+// String ntp = "de.pool.ntp.org";   //NTP server url
+String ntp1 = NTP_Pool_1;         //NTP server url1
+String ntp2 = NTP_Pool_2;         //NTP server url2
+String ntp3 = NTP_Pool_3;         //NTP server url3
 uint8_t curStation = 0;           //index for current selected station in stationlist
 uint8_t curGain = 100;            //current loudness
 float_t fadeGain = 0.0;           //current volume while fading
@@ -268,7 +271,10 @@ void setup() {
   //get values from preferences
   if (pref.isKey("ssid")) ssid = pref.getString("ssid");
   if (pref.isKey("pkey")) pkey = pref.getString("pkey");
-  if (pref.isKey("ntp")) ntp = pref.getString("ntp");
+  // if (pref.isKey("ntp")) ntp = pref.getString("ntp");
+  if (pref.isKey("ntp1")) ntp1 = pref.getString("ntp1");
+  if (pref.isKey("ntp2")) ntp2 = pref.getString("ntp2");
+  if (pref.isKey("ntp3")) ntp3 = pref.getString("ntp3");
   curGain = 50; //default value
   if (pref.isKey("gain")) curGain = pref.getUShort("gain");
   if (pref.isKey("fadeInTime")) fadeInTime = pref.getUShort("fadeInTime");
@@ -300,7 +306,8 @@ void setup() {
   if (pref.isKey("station")) curStation = pref.getUShort("station");
   if (curStation >= STATIONS) curStation = 0; //check to avoid invalid station number
   actStation = curStation;   //set active station to current station 
-  Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
+  // Serial.printf("station %i, gain %i, ssid %s, ntp %s\n", curStation, curGain, ssid.c_str(), ntp.c_str());
+  Serial.printf("station %i, gain %i, ssid %s, ntp1 %s, ntp2 %s, ntp3 %s\n", curStation, curGain, ssid.c_str(), ntp1.c_str(), ntp2.c_str(), ntp3.c_str());
   //run setup functions in the sub parts
   // setup_audio(); //setup audio streams
   audioInit();  //initialize audio Task.
