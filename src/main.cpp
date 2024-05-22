@@ -278,7 +278,7 @@ void setup() {
   curGain = 50; //default value
   if (pref.isKey("gain")) curGain = pref.getUShort("gain");
   if (pref.isKey("fadeInTime")) fadeInTime = pref.getUShort("fadeInTime");
-  if (pref.isKey("fadeOutTime")) fadeInTime = pref.getUShort("fadeOutTime");
+  if (pref.isKey("fadeOutTime")) fadeOutTime = pref.getUShort("fadeOutTime");
   fadeInStep = curGain / fadeInTime;  //Calculate fadeInStep
   fadeOutStep = curGain / fadeOutTime;  //Calculate fadeOutStep
   Serial.printf("curGain = %i, fadeInStep = %f, fadeOutStep = %f \n", curGain, fadeInStep, fadeOutStep);
