@@ -73,8 +73,8 @@ void sendStations() {
   
 }
 
-//AJAX command /cmd/setaccess
-void setAccessData() {
+//AJAX command /cmd/setprefs
+void setPreferences() {
   //the command expects three arguments
   //access data will be saved in preferences
   if (server.hasArg("ssid")) {
@@ -85,18 +85,41 @@ void setAccessData() {
     pkey = server.arg("pkey");
     pref.putString("pkey",pkey);
   }
-  if (server.hasArg("ntp")) {
-    ntp = server.arg("ntp");
-    pref.putString("ntp",ntp);
+  if (server.hasArg("ntp1")) {
+    ntp1 = server.arg("ntp1");
+    pref.putString("ntp1",ntp1);
   }
+  if (server.hasArg("ntp2")) {
+    ntp2 = server.arg("ntp2");
+    pref.putString("ntp2",ntp2);
+  }
+  if (server.hasArg("ntp3")) {
+    ntp3 = server.arg("ntp3");
+    pref.putString("ntp3",ntp3);
+  }
+  if (server.hasArg("fadeIn")) {
+    fadeInTime = server.arg("fadeIn").toInt();
+    pref.putUShort("fadeInTime",fadeInTime);
+  }
+  if (server.hasArg("fadeOut")) {
+    fadeOutTime = server.arg("fadeOut").toInt();
+    pref.putUShort("fadeOutTime",fadeOutTime);
+  }
+  calculateFadeSteps();
   //respond with OK
   server.send(200,"text/plain","OK");
 }
 
-//AJAX command /cmd/getaccess
-void getAccessData() {
-  //send access data separated by new line
-  String msg = String(ssid) + "\n" + String(pkey) + "\n" + String(ntp);
+//AJAX command /cmd/getprefs
+void getPreferences() {
+  //send preferences separated by new line
+  String msg = String(ssid) + "\n" 
+               + String(pkey) + "\n" 
+               + String(ntp1) + "\n" 
+               + String(ntp2) + "\n" 
+               + String(ntp3) + "\n" 
+               + String(fadeInTime) + "\n" 
+               + String(fadeOutTime);
   //respond with access data
   server.send(200,"text/plain",msg);
 }
@@ -252,8 +275,8 @@ void setAlarms() {
   pref.putUShort("alarmday2",alarmday2);
 
   if (server.hasArg("aladur")) {
-    Serial.printf("storing argument 'aladur' = '%s' as '%i' in 'alarmDuration'\n", server.arg("aladur"),server.arg("aladur").toInt(), alarmDuration);
     alarmDuration = server.arg("aladur").toInt();
+    Serial.printf("storing argument 'aladur' = '%s' as '%i' in pref.putUInt('aladur')='%i'\n", server.arg("aladur"),server.arg("aladur").toInt(), alarmDuration);
     pref.putUInt("aladur",alarmDuration);
   }
 
@@ -340,7 +363,8 @@ void testStation() {
   //exspects one argument with the url to be tested
   bool ret = true;
   if (server.hasArg("url"))  {
-    ret = startUrl(server.arg("url"));
+    ret = audioConnecttohost(server.arg("url").c_str());
+    setGain(curGain);
   }
   if (ret) {
     //if success respond is OK
@@ -348,7 +372,7 @@ void testStation() {
   } else {
     //if no success switch back to the current station
     //and respond with ERROR
-    startUrl(String(stationlist[actStation].url));
+    audioConnecttohost((stationlist[actStation].url));
     server.send(300,"text/plain","ERROR");
   }
 }
@@ -356,7 +380,8 @@ void testStation() {
 //AJAX command /cmd/endtest
 void endTest() {
   //switch back to the current station to end the test
-  startUrl(String(stationlist[actStation].url));
+  audioConnecttohost((stationlist[actStation].url));
+  audioStopSong();
   //respond with OK
   server.send(200,"text/plain","OK");
 }
@@ -379,8 +404,8 @@ void setup_webserver() {
   server.on("/cmd/stations",sendStations);
   server.on("/cmd/restorestations",restoreStations);
   server.on("/cmd/restart",restart);
-  server.on("/cmd/setaccess",setAccessData);
-  server.on("/cmd/getaccess",getAccessData);
+  server.on("/cmd/setprefs",setPreferences);
+  server.on("/cmd/getprefs",getPreferences);
   server.on("/cmd/getalarms",getAlarms);
   server.on("/cmd/setalarms",setAlarms);
   server.on("/cmd/getstation",getStationData);

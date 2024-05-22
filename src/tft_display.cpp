@@ -106,6 +106,7 @@ TouchEvent tevent(touch);
 
 //set the gain for x-position where the slider was clicked
 void setGainValue(uint16_t value) {
+  // Value from TFT = 0..324
   char txt[10];
   //calculate gain from x-Position 0 to 100%
   float v = (value - 15) * 0.345;
@@ -116,6 +117,7 @@ void setGainValue(uint16_t value) {
   pref.putUShort("gain",curGain);
   showSlider(27,curGain,100);
   setGain(curGain);
+  calculateFadeSteps();
   sprintf(txt,"%i %%",curGain);
   displayMessage(231,8,80,20,txt,ALIGNRIGHT,false,ILI9341_BLACK,ILI9341_LIGHTGREY,1);
 }
@@ -186,16 +188,16 @@ void textInBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text,
   encodeUnicode(text, tmp);
   tft.getTextBounds("n",0,100,&xt,&yt,&wt,&ht);
   sp =wt;
-  Serial.printf("Space = %i\n",sp);
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Space = %i\n",sp);
   tft.getTextBounds(tmp,0,100,&xt,&yt,&wt,&ht);
-  Serial.printf("Text %s Länge %i\n",text,wt);
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Text %s Länge %i\n",text,wt);
   h0 = 100 - yt;
   x0 = x;
   y = y + h0 +1;
   if (wt<w) { //enough space in one line
     if (align == ALIGNCENTER) x0 += (w-wt)/2;
     if (align == ALIGNRIGHT) x0 += (w-wt);
-    Serial.printf("x= %i, y= %i, ht= %i, text = %s\n",x0,y,ht,tmp);
+    if(CORE_DEBUG_LEVEL >= 5) Serial.printf("x= %i, y= %i, ht= %i, text = %s\n",x0,y,ht,tmp);
     tft.setCursor(x0, y);
     tft.print(tmp);
   } else { //if there is not enough space in one line we adjust the text by word wrap
@@ -207,7 +209,7 @@ void textInBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text,
     len = 0;
     while ((token != NULL) && (l>0)) {
       tft.getTextBounds(token,0,100,&xt,&yt,&wt,&ht); 
-      Serial.printf("Token %s Länge %i gesamt %s Länge %i Line %i\n",token,wt,msg,len,l);
+      if(CORE_DEBUG_LEVEL >= 5) Serial.printf("Token %s Länge %i gesamt %s Länge %i Line %i\n",token,wt,msg,len,l);
       if ((len + wt + sp) < w) {
         if (len > 0) { strcat(msg," "); len +=sp; }
         len = len + wt;
@@ -223,7 +225,7 @@ void textInBox(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text,
         y = y + ht +1;
         l--;
       }
-      Serial.println(token);
+      if(CORE_DEBUG_LEVEL >= 5) Serial.println(token);
       token = strtok(NULL, " ");
       
     }
@@ -262,12 +264,12 @@ void updateTime(boolean redraw) {
     }
     uint8_t z;
     strftime(tim, sizeof(tim), "%H:%M", &ti);
-    Serial.printf("Zeit = %s\n",tim);
+    if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Zeit = %s\n",tim);
     //we iterate over the time string
     //if redraw is true or a number has changed this single number will be redrawn
     for (uint8_t i = 0; i<5; i++) {
       z = (i==2)?10:tim[i]-'0';
-      Serial.printf("Ziffer %i %c = %c\n",z,tim[i],lasttime[i]);
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Ziffer %i %c = %c\n",z,tim[i],lasttime[i]);
       if ((z<11) && (redraw || (tim[i] != lasttime[i]))) {
         tft.drawRGBBitmap(30+i*55,30,ziffern_rot[z],50,70);
       }
@@ -344,6 +346,7 @@ void TFTtoggleRadio(boolean off) {
     // An alarm was tripped so we turn the radio off and display the next alarm:
     if (radio) { //Turn off radio if it is running.
       toggleRadio(true); //TFTtoggleRadio: Turn radio off
+      fadeOut = false;  //Turn off fade out flag in case we're turning radio off during fadeOut
     } 
     // Clear alrm flags and snooze/restart timers.
     alarmTripped = false; //TFTtoggleRadio: Clear alarmTripped in case alarm timeout has been reached.
@@ -353,6 +356,8 @@ void TFTtoggleRadio(boolean off) {
   } else { //Radio is toggeled in non-alarm mode:
     //No Alarm was tripped:
     toggleRadio(off);   //Toggle radio on/off
+    fadeIn = false;     //Turn off fade in flag in case we're toggeling the radio during fadeIn
+    fadeOut = false;    //Turn off fade out flag in case we're turning radio off during fadeOut
     if (!radio){ //Radio is now turned off.
       snoozeWait = 0; //TFTtoggleRadio non-alarm: Clear sleepIn-snooze time.
     }
@@ -362,31 +367,49 @@ void TFTtoggleRadio(boolean off) {
 }
 
 //Radio is toggled from some function:
-void toggleRadio(boolean off) {
+void toggleRadio(boolean off, boolean fade) {
   //Turn radio on or off:
   if (off) {
     //Turn radio off:
-    stopPlaying(); //Stop the stream
-    radio = false;
-    setGain(0);  //Set volume to zero.
+    if ((fade) && (fadeOutTime > 0)){  //Fade-out music if fadeOutTime > 0
+      //Set up values to fade out music and turn radio off in 1second tick loop
+      fadeTimer = fadeOutTime;
+      fadeGain = curGain;
+      fadeOut = true;
+    } else {
+      //Turn radio off directly.
+      audioStopSong();
+      radio = false;
+      setGain(0);  //Set volume to zero.
+    }
   } else {
     // Turn radio on:
+    radio = true;  //Set flag to display radio panel on screen.
+    if ((fade) && (fadeInTime > 0)) {  //Fade-in music if fadeInTime > 0
+      //Set volume to zero and set up values to fade in audio.
+      setGain(0);
+      fadeTimer = fadeInTime;
+      fadeIn = true;
+      fadeGain = 0;
+    } else {
+      // Turn radio on directly:
+      setGain(curGain);  //Set volume to max desired volume.
+    }
+    // Connect to radio station.
     if (connected) {
       //if on start the stream an set the gain
-      radio = true;
-      if (!startUrl(String(stationlist[actStation].url))) {
+      if (!audioConnecttohost((stationlist[actStation].url))) {
         //if no success switch to station 0
         actStation = 0;
-        startUrl(String(stationlist[actStation].url));
+        audioConnecttohost((stationlist[actStation].url));
       }
-      setGain(curGain);  //Set volume to configured volume.
     }
   }
 }
 
 //turn the alarm on or off
 void toggleAlarm() {
-  Serial.println("Toggeling alarm...");
+  if(CORE_DEBUG_LEVEL >= 4) Serial.println("Toggeling alarm...");
   if (alarmsActive){
     alarmsActive = false;
   } else {
@@ -394,12 +417,12 @@ void toggleAlarm() {
     //Scan for next alarm
     findNextAlarm();
   }
-  Serial.printf("Storing alarmsActive = %s\n", alarmsActive ? "true" : "false");
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Storing alarmsActive = %s\n", alarmsActive ? "true" : "false");
   pref.putBool("alarmsActive",alarmsActive);
   
   // Redraw buttons 
   drawButtons();
-  Serial.println("...Toggeling alarm complete.");
+  if(CORE_DEBUG_LEVEL >= 4) Serial.println("...Toggeling alarm complete.");
   }
 
 void startSnooze() {
@@ -408,6 +431,8 @@ void startSnooze() {
   if (alarmTripped){
     // an alarm was tripped:
     toggleRadio(true);  // startSnooze: Turn radio off.
+    fadeIn = false; //Clear fade flags
+    fadeOut = false;
     alarmRestartWait = snoozeTime;  // startSnooze: Set alarmRestartWait timer.
     snoozeWait = 0;  // startSnooze: clear sleepIn snooze timer.
   } else {
@@ -426,10 +451,10 @@ void changeStation() {
     actStation = curStation;
     //save the new value and start stream
     pref.putUShort("station",curStation);
-    if (!startUrl(String(stationlist[actStation].url))) {
+    if (!audioConnecttohost((stationlist[actStation].url))) {
       //if start fails we switch back to station 0
       actStation = 0;
-      startUrl(String(stationlist[actStation].url));
+      audioConnecttohost((stationlist[actStation].url));
     }
   //switch back to clock screen
   clockmode = true; //changeStation: Switch bach to clock mode.
@@ -445,7 +470,7 @@ void touch_loop() {
 //we get position and type of the event
 void onTouchClick(TS_Point p) {
   if (!clockmode) start_conf = millis(); //if we are in config mode reset start_conf on any event
-  Serial.printf("Touch on %i, %i\n",p.x,p.y);
+  if(CORE_DEBUG_LEVEL >= 4) Serial.printf("Touch on %i, %i\n",p.x,p.y);
   if (clockmode) { //if we are in the clock mode, we switch into the config mode. Independent where the event occured.
     clockmode = false;
     showCommand(); 
@@ -498,7 +523,7 @@ void displayClear() {
 
 //show date, time and loudness in the first line
 void displayDateTime() {
-  Serial.println("Show Time");
+  if(CORE_DEBUG_LEVEL >= 5) Serial.println("Show Time");
   updateTime(false);
 }
 
