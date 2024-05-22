@@ -97,8 +97,15 @@ void setPreferences() {
     ntp3 = server.arg("ntp3");
     pref.putString("ntp3",ntp3);
   }
-  //TODO Implement getter/setter for "fadeInTime" and "fadeOutStep" and calculate "fadeInStep", "fadeOutTime"
-  
+  if (server.hasArg("fadeIn")) {
+    fadeInTime = server.arg("fadeIn").toInt();
+    pref.putUShort("fadeInTime",fadeInTime);
+  }
+  if (server.hasArg("fadeOut")) {
+    fadeOutTime = server.arg("fadeOut").toInt();
+    pref.putUShort("fadeOutTime",fadeOutTime);
+  }
+  calculateFadeSteps();
   //respond with OK
   server.send(200,"text/plain","OK");
 }
@@ -106,8 +113,13 @@ void setPreferences() {
 //AJAX command /cmd/getprefs
 void getPreferences() {
   //send preferences separated by new line
-  // String msg = String(ssid) + "\n" + String(pkey) + "\n" + String(ntp);
-  String msg = String(ssid) + "\n" + String(pkey) + "\n" + String(ntp1) + "\n" + String(ntp2) + "\n" + String(ntp3);
+  String msg = String(ssid) + "\n" 
+               + String(pkey) + "\n" 
+               + String(ntp1) + "\n" 
+               + String(ntp2) + "\n" 
+               + String(ntp3) + "\n" 
+               + String(fadeInTime) + "\n" 
+               + String(fadeOutTime);
   //respond with access data
   server.send(200,"text/plain",msg);
 }

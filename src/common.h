@@ -108,6 +108,7 @@ extern uint8_t alarmRestartWait;    //remaining minutes until radio is restarted
 void displayMessage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text, uint8_t align = ALIGNLEFT, boolean big = false, uint16_t fc = ILI9341_WHITE , uint16_t bg = ILI9341_BLACK, uint8_t lines = 1 );
 void findNextAlarm();  //main.cpp
 void setGain(uint8_t gain);  // Convert gain into Volume value and set volume
+void calculateFadeSteps(); // (re)calculate fadeIn and fadeOutStep
 void displayAlarmState();  //tft_display.cpp
 void saveList(); //websrvr.cpp
 void reorder(uint8_t oldpos, uint8_t newpos);

@@ -117,9 +117,7 @@ void setGainValue(uint16_t value) {
   pref.putUShort("gain",curGain);
   showSlider(27,curGain,100);
   setGain(curGain);
-  fadeInStep = float(curGain) / float(fadeInTime);  //Recalculate fadeInStep
-  fadeOutStep = float(curGain) / float(fadeOutTime);  //Recalculate fadeOUtStep
-  if(CORE_DEBUG_LEVEL >= 5) Serial.printf("curGain = %i, fadeInStep = %f, fadeOutStep = %f \n", curGain, fadeInStep, fadeOutStep);
+  calculateFadeSteps();
   sprintf(txt,"%i %%",curGain);
   displayMessage(231,8,80,20,txt,ALIGNRIGHT,false,ILI9341_BLACK,ILI9341_LIGHTGREY,1);
 }
@@ -373,7 +371,7 @@ void toggleRadio(boolean off, boolean fade) {
   //Turn radio on or off:
   if (off) {
     //Turn radio off:
-    if (fade){
+    if ((fade) && (fadeOutTime > 0)){  //Fade-out music if fadeOutTime > 0
       //Set up values to fade out music and turn radio off in 1second tick loop
       fadeTimer = fadeOutTime;
       fadeGain = curGain;
@@ -387,7 +385,7 @@ void toggleRadio(boolean off, boolean fade) {
   } else {
     // Turn radio on:
     radio = true;  //Set flag to display radio panel on screen.
-    if (fade) {
+    if ((fade) && (fadeInTime > 0)) {  //Fade-in music if fadeInTime > 0
       //Set volume to zero and set up values to fade in audio.
       setGain(0);
       fadeTimer = fadeInTime;

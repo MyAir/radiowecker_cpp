@@ -145,6 +145,8 @@ const char MAIN_page[] PROGMEM = R"=====(
                     $("#ntp1_input").val(parts[2]);
                     $("#ntp2_input").val(parts[3]);
                     $("#ntp3_input").val(parts[4]);
+                    $("#fadeIn_input").val(parts[5]);
+                    $("#fadeOut_input").val(parts[6]);
                 }
             });
         }
@@ -195,7 +197,14 @@ const char MAIN_page[] PROGMEM = R"=====(
             $.ajax({
                 type: "GET",
                 url: "/cmd/setprefs",
-                data: { "ssid": $("#ssid_input").val(), "pkey": $("#pkey_input").val(), "ntp1": $("#ntp1_input").val() , "ntp2": $("#ntp2_input").val() , "ntp3": $("#ntp3_input").val() },
+                data: { "ssid": $("#ssid_input").val()
+                      , "pkey": $("#pkey_input").val()
+                      , "ntp1": $("#ntp1_input").val() 
+                      , "ntp2": $("#ntp2_input").val() 
+                      , "ntp3": $("#ntp3_input").val() 
+                      , "fadeIn": $("#fadeIn_input").val() 
+                      , "fadeOut": $("#fadeOut_input").val() 
+                    },
                 success: function (data) {
                     alert(data);
                 }
@@ -434,6 +443,35 @@ const char MAIN_page[] PROGMEM = R"=====(
         <div style="padding-top:10px;"><label for="ntp3_input">NTP3:</label>
             <input id="ntp3_input" class="txtinput" />
         </div>
+        <div>&nbsp;</div>
+        <div style="padding-top:10px;"><label for="fadeIn_input">Musik bei alarm einblenden (0=sofort):</label><br>
+            <div class="slidecontainer"><input id="fadeIn_input"  type="range" min="0" max="180" value="50" class="slider"  />
+                <label id="fadeInTime"></label><label> Sekunden</label>            
+            </div>
+            <script>
+                var fadeInSlider = document.getElementById("fadeIn_input");
+                var fadeInTime = document.getElementById("fadeInTime");
+                fadeInTime.innerHTML = fadeInSlider.value;
+                fadeInSlider.oninput = function() {
+                    fadeInTime.innerHTML = this.value;
+                }
+            </script>
+        </div>
+        <div style="padding-top:10px;"><label for="fadeOut_input">Musik nach Einschlafzeit ausblenden:</label><br>
+            <div class="slidecontainer"><input id="fadeOut_input"  type="range" min="0" max="180" value="50" class="slider"  />
+                <label id="fadeOutTime"></label><label> Sekunden</label>            
+            </div>
+            <script>
+                    var fadeOutSlider = document.getElementById("fadeOut_input");
+                    var fadeOutTime = document.getElementById("fadeOutTime");
+                    fadeOutTime.innerHTML = fadeOutSlider.value;
+    
+                    fadeOutSlider.oninput = function() {
+                        fadeOutTime.innerHTML = this.value;
+                    }
+                </script>
+                </div>
+        </div>
         <div style="padding-top:10px;text-align:center">
             <button id="btn_save" type="button">Speichern</button>
             <button id="btn_reset" type="button" style="margin-left:20px;">Neustart</button>
@@ -584,6 +622,8 @@ const char MAIN_page[] PROGMEM = R"=====(
                     $("#ntp1_input").val(parts[2]);
                     $("#ntp2_input").val(parts[3]);
                     $("#ntp3_input").val(parts[4]);
+                    $("#fadeIn_input").val(parts[5]);
+                    $("#fadeOut_input").val(parts[6]);
                 }
             });
         }
@@ -634,7 +674,14 @@ const char MAIN_page[] PROGMEM = R"=====(
             $.ajax({
                 type: "GET",
                 url: "/cmd/setprefs",
-                data: { "ssid": $("#ssid_input").val(), "pkey": $("#pkey_input").val(), "ntp1": $("#ntp1_input").val() , "ntp2": $("#ntp2_input").val() , "ntp3": $("#ntp3_input").val() },
+                data: { "ssid": $("#ssid_input").val()
+                      , "pkey": $("#pkey_input").val()
+                      , "ntp1": $("#ntp1_input").val() 
+                      , "ntp2": $("#ntp2_input").val() 
+                      , "ntp3": $("#ntp3_input").val() 
+                      , "fadeIn": $("#fadeIn_input").val() 
+                      , "fadeOut": $("#fadeOut_input").val() 
+                    },
                 success: function (data) {
                     alert(data);
                 }
@@ -872,6 +919,35 @@ const char MAIN_page[] PROGMEM = R"=====(
         </div>
         <div style="padding-top:10px;"><label for="ntp3_input">NTP3:</label>
             <input id="ntp3_input" class="txtinput" />
+        </div>
+        <div>&nbsp;</div>
+        <div style="padding-top:10px;"><label for="fadeIn_input">Musik bei alarm einblenden (0=sofort):</label><br>
+            <div class="slidecontainer"><input id="fadeIn_input"  type="range" min="0" max="180" value="50" class="slider"  />
+                <label id="fadeInTime"></label><label> Sekunden</label>            
+            </div>
+            <script>
+                var fadeInSlider = document.getElementById("fadeIn_input");
+                var fadeInTime = document.getElementById("fadeInTime");
+                fadeInTime.innerHTML = fadeInSlider.value;
+                fadeInSlider.oninput = function() {
+                    fadeInTime.innerHTML = this.value;
+                }
+            </script>
+        </div>
+        <div style="padding-top:10px;"><label for="fadeOut_input">Musik nach Einschlafzeit ausblenden:</label><br>
+            <div class="slidecontainer"><input id="fadeOut_input"  type="range" min="0" max="180" value="50" class="slider"  />
+                <label id="fadeOutTime"></label><label> Sekunden</label>            
+            </div>
+            <script>
+                    var fadeOutSlider = document.getElementById("fadeOut_input");
+                    var fadeOutTime = document.getElementById("fadeOutTime");
+                    fadeOutTime.innerHTML = fadeOutSlider.value;
+    
+                    fadeOutSlider.oninput = function() {
+                        fadeOutTime.innerHTML = this.value;
+                    }
+                </script>
+                </div>
         </div>
         <div style="padding-top:10px;text-align:center">
             <button id="btn_save" type="button">Speichern</button>
