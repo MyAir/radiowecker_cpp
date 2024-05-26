@@ -58,7 +58,9 @@ extern Station stationlist[STATIONS];    //list of available stations
 //variables to hold configuration data
 extern String ssid;                 //ssid for WLAN connection
 extern String pkey;                 //passkey for WLAN connection
-extern String ntp;                  //NTP server url
+extern String ntp1;                 //NTP server Pool 1
+extern String ntp2;                 //NTP server Pool 2
+extern String ntp3;                 //NTP server Pool 3
 extern uint8_t curStation ;         //index for current selected station in stationlist
 extern uint8_t curGain ;            //current loudness
 extern float_t fadeGain ;           //current volume while fading
@@ -106,6 +108,7 @@ extern uint8_t alarmRestartWait;    //remaining minutes until radio is restarted
 void displayMessage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* text, uint8_t align = ALIGNLEFT, boolean big = false, uint16_t fc = ILI9341_WHITE , uint16_t bg = ILI9341_BLACK, uint8_t lines = 1 );
 void findNextAlarm();  //main.cpp
 void setGain(uint8_t gain);  // Convert gain into Volume value and set volume
+void calculateFadeSteps(); // (re)calculate fadeIn and fadeOutStep
 void displayAlarmState();  //tft_display.cpp
 void saveList(); //websrvr.cpp
 void reorder(uint8_t oldpos, uint8_t newpos);

@@ -13,6 +13,10 @@
 #include "WiFi.h"
 #include "time.h"
 #include "esp_sntp.h"
+extern String ntp1;                 //NTP server Pool 1
+extern String ntp2;                 //NTP server Pool 2
+extern String ntp3;                 //NTP server Pool 3
+
 
 int32_t	 setenv(const char *__string, const char *__value, int32_t __overwrite);
 void tzset(void);
