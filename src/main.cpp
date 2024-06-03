@@ -357,6 +357,7 @@ void setup() {
   secTick = tick;
   //subtract no of current seconds from tick count to get first time update on the minute.
   if (connected) {
+    getLocalTime(&ti);
     tick = tick - (ti.tm_sec * 1000);
     secTick = tick;
   }
