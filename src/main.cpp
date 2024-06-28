@@ -79,8 +79,6 @@ uint16_t alarmtime = 0;           //next relevant alarm time
 uint8_t alarmday = 8;             //weekday for next relevant alarm or 8 means alarm disabled
 char title[64];                   //character array to hold meta data message
 bool newTitle = false;            //flag to signal a new title
-uint32_t tick = 0;                //last tick-counter value to trigger timed event every 60 seconds
-uint32_t secTick = 0;             //last tick-counter value to trigger timed event every second
 uint32_t discon = 0;              //tick-counter value to calculate disconnected time
 uint16_t minutes;                 //current number of minutes since midnight
 uint8_t weekday;                  //current weekday
@@ -355,15 +353,6 @@ void setup() {
   //setup the web server and the over the air update
   setup_webserver();
   setup_ota();
-  //remember the tick count for the timed event
-  tick = millis();
-  secTick = tick;
-  //subtract no of current seconds from tick count to get first time update on the minute.
-  if (connected) {
-    getLocalTime(&ti);
-    tick = tick - (ti.tm_sec * 1000);
-    secTick = tick;
-  }
   start_conf = 0;
 }
 

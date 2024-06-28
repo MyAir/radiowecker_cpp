@@ -89,8 +89,6 @@ extern uint16_t alarmtime ;         //next relevant alarm time
 extern uint8_t alarmday ;           //weekday for next relevant alarm or 8 means alarm disabled
 extern char title[64];              //character array to hold meta data message
 extern bool newTitle ;              //flag to signal a new title
-extern uint32_t tick ;              //last tick-counter value to trigger timed event every 60 seconds
-extern uint32_t secTick ;           //last tick-counter value to trigger timed event every second
 extern uint32_t discon;             //tick-counter value to calculate disconnected time
 extern uint16_t minutes;            //current number of minutes since midnight
 extern uint8_t weekday;             //current weekday
