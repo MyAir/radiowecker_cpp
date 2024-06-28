@@ -74,7 +74,6 @@ uint8_t alarmday2 = 0B01000001;   //valid week days (example 01000001 means sund
 uint8_t actStation = 0;           //index for current station in station list used for streaming 
 uint8_t bright = 25;              //brightness in percent. 0 means use LDR to control brightness
 //other global variables
-uint32_t lastchange = 0;          //time of last selection change
 uint8_t snoozeWait = 0;           //remaining minutes until radio is turned off due to snooze
 uint16_t alarmtime = 0;           //next relevant alarm time
 uint8_t alarmday = 8;             //weekday for next relevant alarm or 8 means alarm disabled
@@ -93,6 +92,8 @@ boolean radio = false;            //flag to signal radio output
 boolean clockmode = true;         //flag to signal clock is shown on the screen
 boolean alarmTripped = false;     //flag to signal that an alarm has started radio playback
 uint8_t alarmRestartWait = 0;     //remaining minutes until radio is restarted due to alarm-snooze
+uint8_t lastMinute = 0;           //Last minute value for 60s events
+uint8_t lastSecond = 0;           //Last second value for 1s events
 
 //Schreibfaul Global Variables:
 //TODO: Clean up unused global vars.
@@ -334,6 +335,8 @@ void setup() {
     getLocalTime(&ti);
     minutes = ti.tm_hour * 60 + ti.tm_min;
     weekday = ti.tm_wday;
+    lastMinute = ti.tm_min;
+    lastSecond = ti.tm_sec;
     Serial.println("Start");
     findNextAlarm(); //Setup: Find next alarm.
     showClock(); //Setup: Display time and alarm state.
@@ -388,6 +391,10 @@ void audio_loop() {
   }  
 }
 
+//Declare loop functions
+void onlineLoop();
+void minuteEvents();
+void secondEvents();
 
 void loop() {
   //Check over the air update
@@ -401,11 +408,7 @@ void loop() {
     clockmode = true; //Display timeout: Switch bach to clock mode.
     showClock(); //Display timeout: Show clock and alarm state.
   }
-  //show metadata if radio is active
-  if (newTitle && radio && clockmode) {
-    showTitle();
-    newTitle = false;
-  }
+
   //detect a disconnect
   if (connected && (WiFi.status() != WL_CONNECTED)){
     if (connected) {
@@ -419,10 +422,38 @@ void loop() {
     displayClear();
     displayMessage(5, 10, 310, 30, "Connection lost", ALIGNCENTER, true, ILI9341_RED, ILI9341_BLACK,1);
   }
+  //Try a reconnect to wifi if connection lost
+  if (!connected) {
+    WiFi.reconnect();
+    delay(500);
+    if (WiFi.status() == WL_CONNECTED) {
+      connected = true;
+      findNextAlarm(); //Setup: Find next alarm.
+      showClock(); //Setup: Display time and alarm state.
+    }
+  }
+
+  // If we're online perform all events for when we're online (Alarms, Radio fade etc.)
+  if (connected) onlineLoop();
+
+  //do a restart if device was disconnected for more then 5 minutes
+  if (!connected && ((millis() - discon) > 300000)) ESP.restart();
+}
+
+void onlineLoop() {
+  //Get current time
+  getLocalTime(&ti);
+
+  //show metadata if radio is active
+  if (newTitle && radio && clockmode) {
+    showTitle();
+    newTitle = false;
+  }
   //if radio is on get new stream data
   // if (connected && radio) {
   //   audio_loop();
   // }
+
   // //if brightness is set to 0, brightness will be controlled by ambient light
   if (bright == 0) {
     int16_t tmp = analogRead(LDR);
@@ -437,108 +468,113 @@ void loop() {
     }
   } 
 
-  //timed events every second.
-  if ((millis() - secTick) > 1000) {
-    secTick = millis();
-    if (fadeTimer > 0){
-      int8_t gain = 0;
-      fadeTimer --;
-      if (fadeIn) {
-        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeIn:  fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
-        fadeGain += fadeInStep;
-        float zwGain = fadeGain + 0.5 - (fadeGain<0);
-        gain = int(zwGain);
-        if (gain > curGain) gain = curGain;
-        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeIn:  setGain=%i, fadeGain=%f\n", gain, fadeGain);
-        setGain(gain);
-      }
-      if (fadeOut) {
-        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
-        fadeGain -= fadeOutStep;
-        float zwGain = fadeGain + 0.5 - (fadeGain<0);
-        gain = int(zwGain);
-        if (gain < 0 || fadeTimer <= 0) {
-          gain = 0;
-        }  
-        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: setGain=%i, fadeGain=%f\n", gain, fadeGain);
-        setGain(gain);
-        if (gain <= 0) {
-          //Turn radio off:
-          if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: audioStopSong, radio = false\n");
-          audioStopSong();
-          radio = false;
-          showClock();
-        }
-      }
-      if (fadeTimer <= 0) {
-        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeTimer: turning off fadeIn/fadeOut flags\n");
-        fadeIn = false;
-        fadeOut = false;
-      }
-    }
-  } 
+  if (ti.tm_min != lastMinute) {
+    minuteEvents();
+    lastMinute = ti.tm_min;
+  }
+  
+  if (ti.tm_sec != lastSecond) {
+    secondEvents();
+    lastSecond = ti.tm_sec;
+  }
+}
 
+void minuteEvents() {
   //timed events every minute. Update time, Handle alarms and Snooze.
-  if ((millis() - tick) > 60000) {
-    tick = millis();
-    //get date and time information
-    if (connected  && getLocalTime(&ti)) {
-      minutes = ti.tm_hour * 60 + ti.tm_min;
-      weekday = ti.tm_wday;
-    }
-    //set BG light if clock is displayed
-    if (connected && clockmode) {
-      setBGLight(bright);
-      displayDateTime();
-    }
 
-    // Snooze Timer: Turn radio off once snoozeWait is back to zero or display message at what time it's being turend off.
-    if (snoozeWait > 0) { //Radio should be turned off soon:
-      snoozeWait--; //Decrease snoonzeWait by 1 minute.
-      if (snoozeWait == 0) { //Radio should be turned off now:
-        toggleRadio(true, true); //snoozeWait timeout: Turn radio off.
-        if (alarmTripped) { //Radio was turned off due to alarm timeout:
-          // Clear alarm flags.
-          alarmTripped = false; // snoozeWait alarm-timeout: Clear alarmTripped in case alarm timeout has been reached.
-          alarmRestartWait = 0; // snoozeWait alarm-timeout: clear alarm-snooze time.
-          findNextAlarm(); //snoozeWait alarm-timeout: Search for next alarm.
-        }
-        showClock(); //snoozeWait: Display clock and alarm state.
-      } else { //Radio should be turned off but not yet:
-        displayAlarmState(); //snoozeWait: Display alarm state.
+  //Update time if we're not in config screen and set BG light 
+  if (clockmode) {
+    setBGLight(bright);
+    displayDateTime();
+  }
+
+  //Calculate miutes of the day and weekday
+  minutes = ti.tm_hour * 60 + ti.tm_min;
+  weekday = ti.tm_wday;
+
+  // Snooze Timer: Turn radio off once snoozeWait is back to zero or display message at what time it's being turend off.
+  if (snoozeWait > 0) { //Radio should be turned off soon:
+    snoozeWait--; //Decrease snoonzeWait by 1 minute.
+    if (snoozeWait == 0) { //Radio should be turned off now:
+      toggleRadio(true, true); //snoozeWait timeout: Turn radio off.
+      if (alarmTripped) { //Radio was turned off due to alarm timeout:
+        // Clear alarm flags.
+        alarmTripped = false; // snoozeWait alarm-timeout: Clear alarmTripped in case alarm timeout has been reached.
+        alarmRestartWait = 0; // snoozeWait alarm-timeout: clear alarm-snooze time.
+        findNextAlarm(); //snoozeWait alarm-timeout: Search for next alarm.
       }
+      showClock(); //snoozeWait: Display clock and alarm state.
+    } else { //Radio should be turned off but not yet:
+      displayAlarmState(); //snoozeWait: Display alarm state.
     }
+  }
 
-    //Alarm-Restart timer: Restart alarm if alarm-snooze is active:
-    if (alarmRestartWait > 0) { //The alarm should be restarted soon:
-      alarmRestartWait--; //Decrease restart timer by 1 minute.
-      if (alarmRestartWait == 0) { //Alarm shoud be restarted now:
-        snoozeWait = alarmDuration; //alarmRestartWait: Set snooze time for auto-turnOff.
-        toggleRadio(false, true); // alarmRestartWait: Turn radio back on.
-        showClock();  //Display clock, radio and alarm state.
-      } else { //Alarm shoud be restarted but not yet:
-        displayAlarmState(); //alarmStateWait: Display when alarm is reactivated.
-      }
+  //Alarm-Restart timer: Restart alarm if alarm-snooze is active:
+  if (alarmRestartWait > 0) { //The alarm should be restarted soon:
+    alarmRestartWait--; //Decrease restart timer by 1 minute.
+    if (alarmRestartWait == 0) { //Alarm shoud be restarted now:
+      snoozeWait = alarmDuration; //alarmRestartWait: Set snooze time for auto-turnOff.
+      toggleRadio(false, true); // alarmRestartWait: Turn radio back on.
+      showClock();  //Display clock, radio and alarm state.
+    } else { //Alarm shoud be restarted but not yet:
+      displayAlarmState(); //alarmStateWait: Display when alarm is reactivated.
     }
+  }
 
-    //Alarm trigger:
-    //if alrms are active and an active alarm was found, check for day and time.
-    if ((alarmsActive) && (alarmday < 8) && getLocalTime(&ti)) {
-      //if alarm day and time is reached turn radio on and get values for next expected alarm
-      if ((alarmday == weekday) && (minutes == alarmtime)) {
-        // Set flag that alrm is tripped.
-        alarmTripped = true;
-        // Set snooze Timer so alarm does not sound longer than defined alarm duration.
-        snoozeWait = alarmDuration;
-        // Turn on radio.
-        toggleRadio(false, true); // Alarm tripped. Turn radio on.
+  //Alarm trigger:
+  //if alrms are active and an active alarm was found, check for day and time.
+  if ((alarmsActive) && (alarmday < 8) && getLocalTime(&ti)) {
+    //if alarm day and time is reached turn radio on and get values for next expected alarm
+    if ((alarmday == weekday) && (minutes == alarmtime)) {
+      // Set flag that alrm is tripped.
+      alarmTripped = true;
+      // Set snooze Timer so alarm does not sound longer than defined alarm duration.
+      snoozeWait = alarmDuration;
+      // Turn on radio.
+      toggleRadio(false, true); // Alarm tripped. Turn radio on.
+      showClock();
+    }
+  }
+}
+
+void secondEvents() {
+  //timed events every second.
+  if (fadeTimer > 0){
+    int8_t gain = 0;
+    fadeTimer --;
+    if (fadeIn) {
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeIn:  fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
+      fadeGain += fadeInStep;
+      float zwGain = fadeGain + 0.5 - (fadeGain<0);
+      gain = int(zwGain);
+      if (gain > curGain) gain = curGain;
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeIn:  setGain=%i, fadeGain=%f\n", gain, fadeGain);
+      setGain(gain);
+    }
+    if (fadeOut) {
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: fadeTimer=%i, fadeGain=%f\n", fadeTimer, fadeGain);
+      fadeGain -= fadeOutStep;
+      float zwGain = fadeGain + 0.5 - (fadeGain<0);
+      gain = int(zwGain);
+      if (gain < 0 || fadeTimer <= 0) {
+        gain = 0;
+      }  
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: setGain=%i, fadeGain=%f\n", gain, fadeGain);
+      setGain(gain);
+      if (gain <= 0) {
+        //Turn radio off:
+        if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeOut: audioStopSong, radio = false\n");
+        audioStopSong();
+        radio = false;
         showClock();
       }
     }
-  } //end if 1 minute timed events.
-
-  //do a restart if device was disconnected for more then 5 minutes
-  if (!connected && ((millis() - discon) > 300000)) ESP.restart();
+    if (fadeTimer <= 0) {
+      if(CORE_DEBUG_LEVEL >= 4) Serial.printf("fadeTimer: turning off fadeIn/fadeOut flags\n");
+      fadeIn = false;
+      fadeOut = false;
+    }
+  }
 }
 
 /*****************************************************************************************************************************************************
